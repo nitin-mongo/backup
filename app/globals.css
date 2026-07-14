@@ -1,0 +1,161 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0c1117;
+  --surface: #161b22;
+  --surface2: #1c2129;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text2: #aab4be;
+  --accent: #58a6ff;
+  --green: #3fb950;
+  --red: #f85149;
+  --orange: #d29922;
+  --purple: #bc8cff;
+  --cyan: #39d353;
+}
+
+/* Force all elements to use the theme text color by default.
+   Inline styles (higher specificity) still override this. */
+*, *::before, *::after {
+  box-sizing: border-box;
+  color: var(--text);
+}
+
+html {
+  background: var(--bg);
+  min-height: 100%;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* Class-based colour overrides */
+.pos { color: var(--green) !important; }
+.neg { color: var(--red) !important; }
+.warn { color: var(--orange) !important; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; color: var(--text); }
+thead th {
+  position: sticky; top: 0;
+  background: var(--surface2);
+  color: var(--text2);
+  text-align: right;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 500;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  white-space: nowrap;
+}
+thead th:first-child { text-align: left; }
+tbody td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+tbody td:first-child { text-align: left; font-weight: 500; color: var(--text); }
+tbody tr:hover { background: rgba(88,166,255,.06); }
+tbody tr.totals-row { background: var(--surface2); font-weight: 600; color: var(--text); }
+
+.scr { overflow-x: auto; max-height: 600px; overflow-y: auto; }
+
+.note { font-size: 12px; color: var(--text2); font-style: italic; margin-top: 8px; }
+
+.btn {
+  display: inline-block;
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-primary { background: var(--accent); color: #0c1117; }
+.btn-primary:hover { background: #79c0ff; }
+.btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn-outline:hover { border-color: var(--accent); }
+
+.analysis-log {
+  background: var(--surface2);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+  font-family: 'SF Mono', monospace;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--text2);
+}
+
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  background: var(--surface);
+}
+.drop-zone:hover, .drop-zone.over {
+  border-color: var(--accent);
+  background: rgba(88,166,255,.05);
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--surface2);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.fi-ok { background: rgba(63,185,80,.15); color: var(--green); padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+.fi-dup { background: rgba(210,153,34,.15); color: var(--orange); padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+.fi-err { background: rgba(248,81,73,.15); color: var(--red); padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+
+.stag { display: inline-block; background: rgba(63,185,80,.15); color: var(--green); padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+.stag-r { display: inline-block; background: rgba(248,81,73,.15); color: var(--red); padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
