@@ -1,35 +1,35 @@
 import { MongoClient, Db } from 'mongodb';
 
-const uri = process.env.MONGODB_URI!;
-const dbName = process.env.MONGODB_DB || 'darwin_backup';
-
-if (!uri) {
-  throw new Error('MONGODB_URI environment variable is not set');
-}
-
-let client: MongoClient;
-let clientPromise: Promise<MongoClient>;
-
 declare global {
   // eslint-disable-next-line no-var
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
-if (process.env.NODE_ENV === 'development') {
-  // In development, use a global variable so the connection is reused across HMR
-  if (!global._mongoClientPromise) {
-    client = new MongoClient(uri);
-    global._mongoClientPromise = client.connect();
+const dbName = process.env.MONGODB_DB || 'darwin_backup';
+
+function buildClientPromise(): Promise<MongoClient> {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error(
+      'MONGODB_URI is not set. In Vercel: Project Settings → Environment Variables → add MONGODB_URI.'
+    );
   }
-  clientPromise = global._mongoClientPromise;
-} else {
-  client = new MongoClient(uri);
-  clientPromise = client.connect();
+  const client = new MongoClient(uri);
+  return client.connect();
+}
+
+function getClientPromise(): Promise<MongoClient> {
+  if (process.env.NODE_ENV === 'development') {
+    // Reuse across HMR reloads in development
+    if (!global._mongoClientPromise) {
+      global._mongoClientPromise = buildClientPromise();
+    }
+    return global._mongoClientPromise;
+  }
+  return buildClientPromise();
 }
 
 export async function getDb(): Promise<Db> {
-  const c = await clientPromise;
-  return c.db(dbName);
+  const client = await getClientPromise();
+  return client.db(dbName);
 }
-
-export default clientPromise;
