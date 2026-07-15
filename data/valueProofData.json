@@ -1,0 +1,271 @@
+{
+  "projections": {
+    "2026-01": {
+      "dataGB": 111222,
+      "actualBackupGB": 443974,
+      "actualRatio": 3.99,
+      "hypBackupGBcons": 462684,
+      "hypBackupGBtrend": 531136,
+      "hypRatioCons": 4.16,
+      "hypRatioTrend": 4.78,
+      "hypCCBGrossCons": 146303.3,
+      "hypCCBNetCons": 117042.64,
+      "hypTotalCons": 119797.01,
+      "hypCCBGrossTrend": 167948.26,
+      "hypCCBNetTrend": 134358.61,
+      "hypTotalTrend": 137112.98,
+      "actualAtlasTotal": 120686.32,
+      "actualCCBNet": 117906.84,
+      "actualExport": 25.11,
+      "savingsCons": -889.31,
+      "savingsTrend": 16426.66,
+      "savingsPctCons": -0.7
+    },
+    "2026-02": {
+      "dataGB": 117068,
+      "actualBackupGB": 444430,
+      "actualRatio": 3.8,
+      "hypBackupGBcons": 487003,
+      "hypBackupGBtrend": 576081,
+      "hypRatioCons": 4.16,
+      "hypRatioTrend": 4.92,
+      "hypCCBGrossCons": 153993.23,
+      "hypCCBNetCons": 123194.58,
+      "hypTotalCons": 125745.21,
+      "hypCCBGrossTrend": 182160.26,
+      "hypCCBNetTrend": 145728.21,
+      "hypTotalTrend": 148278.84,
+      "actualAtlasTotal": 107234.17,
+      "actualCCBNet": 103101.5,
+      "actualExport": 1582.04,
+      "savingsCons": 18511.04,
+      "savingsTrend": 41044.67,
+      "savingsPctCons": 14.7
+    },
+    "2026-03": {
+      "dataGB": 119286,
+      "actualBackupGB": 449924,
+      "actualRatio": 3.77,
+      "hypBackupGBcons": 496230,
+      "hypBackupGBtrend": 604346,
+      "hypRatioCons": 4.16,
+      "hypRatioTrend": 5.07,
+      "hypCCBGrossCons": 156910.82,
+      "hypCCBNetCons": 125528.66,
+      "hypTotalCons": 127641.25,
+      "hypCCBGrossTrend": 191097.91,
+      "hypCCBNetTrend": 152878.32,
+      "hypTotalTrend": 154990.91,
+      "actualAtlasTotal": 125235.88,
+      "actualCCBNet": 115370.54,
+      "actualExport": 7752.75,
+      "savingsCons": 2405.37,
+      "savingsTrend": 29755.03,
+      "savingsPctCons": 1.9
+    },
+    "2026-04": {
+      "dataGB": 125131,
+      "actualBackupGB": 479956,
+      "actualRatio": 3.84,
+      "hypBackupGBcons": 520545,
+      "hypBackupGBtrend": 652160,
+      "hypRatioCons": 4.16,
+      "hypRatioTrend": 5.21,
+      "hypCCBGrossCons": 164599.43,
+      "hypCCBNetCons": 131679.55,
+      "hypTotalCons": 133722.41,
+      "hypCCBGrossTrend": 206216.91,
+      "hypCCBNetTrend": 164973.52,
+      "hypTotalTrend": 167016.38,
+      "actualAtlasTotal": 135484.71,
+      "actualCCBNet": 118910.6,
+      "actualExport": 14531.25,
+      "savingsCons": -1762.3,
+      "savingsTrend": 31531.67,
+      "savingsPctCons": -1.3
+    },
+    "2026-05": {
+      "dataGB": 142548,
+      "actualBackupGB": 458161,
+      "actualRatio": 3.21,
+      "hypBackupGBcons": 593000,
+      "hypBackupGBtrend": 763669,
+      "hypRatioCons": 4.16,
+      "hypRatioTrend": 5.36,
+      "hypCCBGrossCons": 187510.05,
+      "hypCCBNetCons": 150008.04,
+      "hypTotalCons": 151968.16,
+      "hypCCBGrossTrend": 241476.56,
+      "hypCCBNetTrend": 193181.25,
+      "hypTotalTrend": 195141.37,
+      "actualAtlasTotal": 183218.39,
+      "actualCCBNet": 117533.75,
+      "actualExport": 63724.52,
+      "savingsCons": -31250.23,
+      "savingsTrend": 11922.98,
+      "savingsPctCons": -20.6
+    },
+    "2026-06": {
+      "dataGB": 153477,
+      "actualBackupGB": 226728,
+      "actualRatio": 1.48,
+      "hypBackupGBcons": 638464,
+      "hypBackupGBtrend": 844542,
+      "hypRatioCons": 4.16,
+      "hypRatioTrend": 5.5,
+      "hypCCBGrossCons": 201886.24,
+      "hypCCBNetCons": 161508.99,
+      "hypTotalCons": 162446.12,
+      "hypCCBGrossTrend": 267049.26,
+      "hypCCBNetTrend": 213639.41,
+      "hypTotalTrend": 214576.54,
+      "actualAtlasTotal": 110059.42,
+      "actualCCBNet": 57981.09,
+      "actualExport": 51140.67,
+      "savingsCons": 52386.7,
+      "savingsTrend": 104517.12,
+      "savingsPctCons": 32.2
+    },
+    "2026-07": {
+      "dataGB": 146028,
+      "actualBackupGB": 221290,
+      "actualRatio": 1.52,
+      "hypBackupGBcons": 607476,
+      "hypBackupGBtrend": 824793,
+      "hypRatioCons": 4.16,
+      "hypRatioTrend": 5.65,
+      "hypCCBGrossCons": 192087.7,
+      "hypCCBNetCons": 153670.16,
+      "hypTotalCons": 154064.98,
+      "hypCCBGrossTrend": 260804.39,
+      "hypCCBNetTrend": 208643.51,
+      "hypTotalTrend": 209038.33,
+      "actualAtlasTotal": 45420.02,
+      "actualCCBNet": 24540.15,
+      "actualExport": 20485.05,
+      "savingsCons": 108644.96,
+      "savingsTrend": 163618.31,
+      "savingsPctCons": 70.5
+    }
+  },
+  "preOptStats": {
+    "avgCCB": 145461.08,
+    "avgBackupGB": 460020.0,
+    "avgDataGB": 110532.0,
+    "avgTotal": 148065.37,
+    "ratioAvg": 4.16,
+    "ratioPeak": 4.63,
+    "ccbRatePerGB": 0.31621,
+    "costPerDataGB": 1.316
+  },
+  "currentStats": {
+    "dataGB": 153477.0,
+    "backupGB": 226728.0,
+    "ratio": 1.48,
+    "atlasTotal": 110059.42,
+    "costPerDataGB": 0.717
+  },
+  "summary": {
+    "cumulativeSavingsCons": 148046.24,
+    "cumulativeSavingsTrend": 398816.45,
+    "annualizedSavingsCons": 628640.4,
+    "annualizedSavingsTrend": 1254205.44,
+    "dataGrowthPct": 38.9,
+    "backupGBDropPct": 50.7,
+    "ccbDropPct": 60.1,
+    "costPerGBImprovement": 45.5,
+    "ratioImprovement": 64.4
+  },
+  "historicalRatios": {
+    "2025-01": {
+      "ratio": 3.03,
+      "dataGB": 116212,
+      "backupGB": 352342
+    },
+    "2025-02": {
+      "ratio": 3.17,
+      "dataGB": 116500,
+      "backupGB": 368830
+    },
+    "2025-03": {
+      "ratio": 3.3,
+      "dataGB": 116227,
+      "backupGB": 383634
+    },
+    "2025-04": {
+      "ratio": 3.4,
+      "dataGB": 116868,
+      "backupGB": 397765
+    },
+    "2025-05": {
+      "ratio": 3.53,
+      "dataGB": 118718,
+      "backupGB": 419189
+    },
+    "2025-07": {
+      "ratio": 4.3,
+      "dataGB": 105635,
+      "backupGB": 454214
+    },
+    "2025-08": {
+      "ratio": 3.98,
+      "dataGB": 106898,
+      "backupGB": 425723
+    },
+    "2025-09": {
+      "ratio": 3.99,
+      "dataGB": 109681,
+      "backupGB": 437602
+    },
+    "2025-10": {
+      "ratio": 3.83,
+      "dataGB": 114878,
+      "backupGB": 439831
+    },
+    "2025-11": {
+      "ratio": 4.25,
+      "dataGB": 116014,
+      "backupGB": 493230
+    },
+    "2025-12": {
+      "ratio": 4.63,
+      "dataGB": 110089,
+      "backupGB": 509519
+    },
+    "2026-01": {
+      "ratio": 3.99,
+      "dataGB": 111222,
+      "backupGB": 443974
+    },
+    "2026-02": {
+      "ratio": 3.8,
+      "dataGB": 117068,
+      "backupGB": 444430
+    },
+    "2026-03": {
+      "ratio": 3.77,
+      "dataGB": 119286,
+      "backupGB": 449924
+    },
+    "2026-04": {
+      "ratio": 3.84,
+      "dataGB": 125131,
+      "backupGB": 479956
+    },
+    "2026-05": {
+      "ratio": 3.21,
+      "dataGB": 142548,
+      "backupGB": 458161
+    },
+    "2026-06": {
+      "ratio": 1.48,
+      "dataGB": 153477,
+      "backupGB": 226728
+    },
+    "2026-07": {
+      "ratio": 1.52,
+      "dataGB": 146028,
+      "backupGB": 221290
+    }
+  }
+}

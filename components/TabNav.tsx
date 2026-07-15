@@ -1,6 +1,6 @@
 'use client';
 
-type TabId = 'overview' | 'projection' | 's3costs' | 'clusters' | 'whatif' | 'retention' | 'strategy' | 'discount' | 'upload';
+type TabId = 'overview' | 'projection' | 's3costs' | 'clusters' | 'whatif' | 'retention' | 'strategy' | 'discount' | 'valueproof' | 'upload';
 
 interface TabNavProps {
   active: TabId;
@@ -16,6 +16,7 @@ const TABS: { id: TabId; label: string; special?: boolean }[] = [
   { id: 'retention', label: 'Retention & Export Scenarios' },
   { id: 'strategy', label: 'Strategy' },
   { id: 'discount', label: '% Discount Analysis', special: true },
+  { id: 'valueproof', label: '📊 Value Proof', special: true },
   { id: 'upload', label: '+ Add Invoices', special: true },
 ];
 
