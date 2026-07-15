@@ -14,8 +14,9 @@ const WhatIfTab = dynamic(() => import('@/components/tabs/WhatIfTab'), { ssr: fa
 const RetentionTab = dynamic(() => import('@/components/tabs/RetentionTab'), { ssr: false });
 const StrategyTab = dynamic(() => import('@/components/tabs/StrategyTab'), { ssr: false });
 const UploadTab = dynamic(() => import('@/components/tabs/UploadTab'), { ssr: false });
+const DiscountTab = dynamic(() => import('@/components/tabs/DiscountTab'), { ssr: false });
 
-type TabId = 'overview' | 'projection' | 's3costs' | 'clusters' | 'whatif' | 'retention' | 'strategy' | 'upload';
+type TabId = 'overview' | 'projection' | 's3costs' | 'clusters' | 'whatif' | 'retention' | 'strategy' | 'upload' | 'discount';
 
 interface Props {
   data: DashboardData;
@@ -60,6 +61,7 @@ export default function Dashboard({ data, dbSource }: Props) {
       {activeTab === 'retention' && <RetentionTab data={data} />}
       {activeTab === 'strategy' && <StrategyTab data={data} />}
       {activeTab === 'upload' && <UploadTab data={data} />}
+      {activeTab === 'discount' && <DiscountTab />}
     </div>
   );
 }
