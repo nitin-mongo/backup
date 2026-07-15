@@ -15,27 +15,28 @@ export async function GET() {
   try {
     const db = await getDb();
     const col = db.collection(COLLECTION);
+    const now = new Date().toISOString();
 
-    let doc = await col.findOne({ _id: DOC_ID as unknown as never });
+    // Idempotent seed: only inserts if document doesn't already exist
+    await col.updateOne(
+      { _id: DOC_ID as unknown as never },
+      {
+        $setOnInsert: {
+          ...(staticData as unknown as DashboardData),
+          _seededAt: now,
+          _updatedAt: now,
+        },
+      },
+      { upsert: true }
+    );
 
-    if (!doc) {
-      // Seed the database with the static JSON data
-      const seedDoc = {
-        _id: DOC_ID as unknown as never,
-        ...(staticData as unknown as DashboardData),
-        _seededAt: new Date().toISOString(),
-        _updatedAt: new Date().toISOString(),
-      };
-      await col.insertOne(seedDoc);
-      doc = seedDoc;
-    }
+    const doc = await col.findOne({ _id: DOC_ID as unknown as never });
+    if (!doc) throw new Error('Document not found after upsert');
 
-    // Remove MongoDB internal _id before returning
     const { _id, ...data } = doc as Record<string, unknown>;
-    return NextResponse.json({ success: true, data, source: _id ? 'mongodb' : 'seed' });
+    return NextResponse.json({ success: true, data, source: 'mongodb' });
   } catch (err) {
     console.error('[GET /api/data] MongoDB error:', err);
-    // Fall back to static data if MongoDB is unreachable
     return NextResponse.json({ success: true, data: staticData, source: 'static' });
   }
 }
