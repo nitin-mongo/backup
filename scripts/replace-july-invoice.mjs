@@ -10,8 +10,14 @@
 import { readFileSync } from 'fs';
 import { MongoClient } from 'mongodb';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://nitin:Ronaldo32@solutionconsultingasset.pyuze.mongodb.net/?appName=darwin-backup';
+const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_DB  = process.env.MONGODB_DB  || 'darwin_backup';
+
+if (!MONGODB_URI) {
+  console.error('Error: MONGODB_URI environment variable is not set.');
+  console.error('Usage: MONGODB_URI="mongodb+srv://..." node scripts/replace-july-invoice.mjs <path-to-csv>');
+  process.exit(1);
+}
 const COLLECTION  = 'dashboard_data';
 const DOC_ID      = 'main';
 
