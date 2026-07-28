@@ -149,21 +149,66 @@ export default function ClustersTab({ data }: Props) {
           ? Math.round(1 + (totalSnapGB - fullSnapGB) / incrementalPerSnap)
           : 1;
 
-        // ── CCB-Only vs CCB+Export comparison ──
-        // Scenario A: CCB only, 10-day retention (no exports) — baseline
-        const scenA_ccb   = md.ccb;
-        const scenA_total = md.ccb; // no export in this scenario
+        // ── Section 3: Historical CCB Only vs CCB + Export ──
+        const hasWhatIf = !!cl.whatIf;
+        const clMonths  = months.filter(m => (cl.months[m]?.total || 0) > 0);
 
-        // Scenario B: CCB reduced to 3 days (~30% of 10d) + keep export uploads
-        // Ratio: 3-day storage ≈ full + 11 incrementals vs 10-day = full + 39 incrementals
-        const ccbRatio3d  = fullSnapGB + 11 * incrementalPerSnap > 0
-          ? (fullSnapGB + 11 * incrementalPerSnap) / totalSnapGB
-          : 0.30;
-        const scenB_ccb   = Math.round(md.ccb * Math.min(ccbRatio3d, 0.40));
-        const scenB_exp   = md.exportUpload;
-        const scenB_total = scenB_ccb + scenB_exp;
-        const savings     = scenA_total - scenB_total;
-        const savingsPct  = Math.round((savings / scenA_total) * 100);
+        // Hypothetical CCB per month: what would CCB have cost if exports were never introduced?
+        // Uses preAvgCCB (old policy baseline) scaled by each month's data size growth.
+        const hypotheticalByMonth = clMonths.map(m => {
+          if (!hasWhatIf || !cl.whatIf!.preAvgData) return cl.months[m]?.ccb || 0;
+          const mData = cl.months[m]?.avgDataGB || 0;
+          return Math.round((cl.whatIf!.preAvgCCB * mData) / cl.whatIf!.preAvgData);
+        });
+
+        const actualCCBByMonth    = clMonths.map(m => cl.months[m]?.ccb          || 0);
+        const actualExportByMonth = clMonths.map(m => cl.months[m]?.totalExport  || 0);
+        const actualTotalByMonth  = clMonths.map((m, i) => actualCCBByMonth[i] + actualExportByMonth[i]);
+
+        const totalHypothetical = hypotheticalByMonth.reduce((a, b) => a + b, 0);
+        const totalActual       = actualTotalByMonth.reduce((a, b) => a + b, 0);
+        const totalSavings      = totalHypothetical - totalActual;
+        const totalSavingsPct   = totalHypothetical > 0 ? Math.round((totalSavings / totalHypothetical) * 100) : 0;
+
+        // Latest full month delta
+        const latestFullIdx   = clMonths.length >= 2 ? clMonths.length - 2 : clMonths.length - 1;
+        const latestHypo      = hypotheticalByMonth[latestFullIdx] || 0;
+        const latestActual    = actualTotalByMonth[latestFullIdx]  || 0;
+        const latestSavings   = latestHypo - latestActual;
+
+        const histChartData = {
+          labels: clMonths.map(monthLabel),
+          datasets: [
+            {
+              label: 'Hypothetical: CCB Only (no S3 exports)',
+              data: hypotheticalByMonth,
+              borderColor: '#f85149',
+              backgroundColor: 'rgba(248,81,73,.08)',
+              tension: 0.3,
+              pointRadius: 3,
+              fill: false,
+            },
+            {
+              label: 'Actual: CCB + S3 Export (total)',
+              data: actualTotalByMonth,
+              borderColor: '#3fb950',
+              backgroundColor: 'rgba(63,185,80,.12)',
+              tension: 0.3,
+              pointRadius: 3,
+              fill: true,
+            },
+            {
+              label: 'Actual: CCB alone',
+              data: actualCCBByMonth,
+              borderColor: '#58a6ff',
+              backgroundColor: 'transparent',
+              tension: 0.3,
+              pointRadius: 2,
+              borderDash: [4, 4],
+              fill: false,
+            },
+          ],
+        };
 
         // Tier waterfall items
         const tiers = [
@@ -296,91 +341,105 @@ export default function ClustersTab({ data }: Props) {
               </div>
             </div>
 
-            {/* ── Section 3: CCB Only vs CCB + Export Strategy ── */}
+            {/* ── Section 3: Historical CCB Only vs CCB + Export ── */}
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 20 }}>
               <h4 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
-                CCB Only vs CCB + S3 Export — Which is Better?
+                If S3 Exports Were Never Introduced — Month-by-Month (Jan 2025 → Latest)
               </h4>
               <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 20, lineHeight: 1.7 }}>
-                Comparing keeping long CCB retention (no exports) against reducing CCB to 3 days and adding S3 exports for long-term recoverability.
+                The <span style={{ color: '#f85149', fontWeight: 600 }}>red line</span> shows what CCB alone would have cost each month if the old retention policy continued with no S3 exports (scaled by actual data growth per month).
+                The <span style={{ color: '#3fb950', fontWeight: 600 }}>green area</span> is what was actually paid (CCB + Export combined).
+                The gap is the value delivered by the export strategy.
               </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
-                {/* Scenario A */}
-                <div style={{ background: 'rgba(248,81,73,.06)', border: '1px solid rgba(248,81,73,.25)', borderRadius: 10, padding: 16 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#f85149', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-                    Scenario A — CCB Only
+              {/* Summary stat cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 20 }}>
+                {[
+                  { label: 'Cumulative Hypothetical CCB', val: fmt(totalHypothetical), sub: 'if no exports (all months)', color: '#f85149' },
+                  { label: 'Cumulative Actual (CCB + Export)', val: fmt(totalActual), sub: 'what was actually paid', color: '#3fb950' },
+                  { label: 'Total Savings Delivered', val: fmt(totalSavings), sub: 'across all months', color: 'var(--green)', bold: true },
+                  { label: 'Overall Cost Reduction', val: totalSavingsPct + '%', sub: 'vs hypothetical baseline', color: 'var(--green)', bold: true },
+                ].map((s, i) => (
+                  <div key={i} style={{ background: 'var(--surface2)', borderRadius: 10, padding: 14, borderTop: `3px solid ${s.color}` }}>
+                    <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 6 }}>{s.label}</div>
+                    <div style={{ fontSize: s.bold ? 22 : 18, fontWeight: 700, color: s.color }}>{s.val}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 4 }}>{s.sub}</div>
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 8 }}>10-day retention · No S3 exports · 2-day PITR oplog</div>
-                  <table style={{ width: '100%', fontSize: 12 }}>
-                    <tbody>
-                      <tr><td style={{ color: 'var(--text2)', paddingBottom: 6 }}>CCB cost (invoice)</td><td style={{ textAlign: 'right', fontWeight: 600, color: 'var(--text)' }}>{fmt(scenA_ccb)}</td></tr>
-                      <tr><td style={{ color: 'var(--text2)', paddingBottom: 6 }}>S3 export cost</td><td style={{ textAlign: 'right', color: 'var(--text2)' }}>—</td></tr>
-                      <tr style={{ borderTop: '1px solid var(--border)' }}>
-                        <td style={{ color: 'var(--text)', fontWeight: 600, paddingTop: 8 }}>Monthly total</td>
-                        <td style={{ textAlign: 'right', fontWeight: 700, fontSize: 15, color: '#f85149', paddingTop: 8 }}>{fmt(scenA_total)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <div style={{ marginTop: 12, fontSize: 11, color: 'var(--text2)', lineHeight: 1.6 }}>
-                    ⚠ Recoverability limited to <strong style={{ color: 'var(--text)' }}>10 days</strong>. No long-term archival.
-                  </div>
-                </div>
-
-                {/* Scenario B */}
-                <div style={{ background: 'rgba(63,185,80,.06)', border: '1px solid rgba(63,185,80,.25)', borderRadius: 10, padding: 16 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#3fb950', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-                    Scenario B — CCB (3-day) + S3 Exports ✓
-                  </div>
-                  <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 8 }}>3-day CCB retention · Daily S3 exports · Unlimited long-term PITR</div>
-                  <table style={{ width: '100%', fontSize: 12 }}>
-                    <tbody>
-                      <tr><td style={{ color: 'var(--text2)', paddingBottom: 6 }}>CCB cost (est. ~30%)</td><td style={{ textAlign: 'right', fontWeight: 600, color: 'var(--text)' }}>{fmt(scenB_ccb)}</td></tr>
-                      <tr><td style={{ color: 'var(--text2)', paddingBottom: 6 }}>S3 export upload</td><td style={{ textAlign: 'right', fontWeight: 600, color: 'var(--text)' }}>{fmt(scenB_exp)}</td></tr>
-                      <tr style={{ borderTop: '1px solid var(--border)' }}>
-                        <td style={{ color: 'var(--text)', fontWeight: 600, paddingTop: 8 }}>Monthly total</td>
-                        <td style={{ textAlign: 'right', fontWeight: 700, fontSize: 15, color: '#3fb950', paddingTop: 8 }}>{fmt(scenB_total)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <div style={{ marginTop: 12, fontSize: 11, color: 'var(--text2)', lineHeight: 1.6 }}>
-                    ✓ S3 snapshots retained as long as needed. Recovery possible from any export date.
-                  </div>
-                </div>
+                ))}
               </div>
 
-              {/* Savings Banner */}
-              <div style={{ background: savings > 0 ? 'rgba(63,185,80,.1)' : 'rgba(248,81,73,.1)', border: `1px solid ${savings > 0 ? 'rgba(63,185,80,.3)' : 'rgba(248,81,73,.3)'}`, borderRadius: 10, padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
-                <div>
-                  <div style={{ fontSize: 11, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '.5px' }}>Monthly Savings — Scenario B vs Scenario A</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: savings > 0 ? 'var(--green)' : 'var(--red)' }}>
-                    {savings > 0 ? '+' : ''}{fmt(savings)} / month
-                  </div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 32, fontWeight: 800, color: savings > 0 ? 'var(--green)' : 'var(--red)' }}>{savingsPct}%</div>
-                  <div style={{ fontSize: 11, color: 'var(--text2)' }}>cost reduction</div>
-                </div>
-              </div>
-
-              {/* Chart */}
-              <ChartWrapper type="bar" data={compData} height={220} options={{
+              {/* Historical chart */}
+              <ChartWrapper type="line" data={histChartData as never} height={300} options={{
                 plugins: {
                   legend: { position: 'bottom' as const, labels: { boxWidth: 10, font: { size: 11 } } },
-                  tooltip: { callbacks: { label: (c) => c.dataset.label + ': ' + fmt(c.raw as number) } }
+                  tooltip: { callbacks: { label: (c) => c.dataset.label + ': ' + fmt(c.raw as number) } },
                 },
                 scales: {
                   y: { ticks: { callback: (v) => '$' + (Number(v)/1000).toFixed(0)+'K' }, grid: { color: '#21262d' } },
-                  x: { grid: { display: false } }
+                  x: { grid: { display: false } },
                 }
-              }} />
+              } as never} />
+
+              {/* Per-month breakdown table — last 8 months */}
+              <div style={{ marginTop: 20, overflowX: 'auto' }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>
+                  Month-by-Month Detail (last {Math.min(clMonths.length, 8)} months)
+                </div>
+                <table style={{ width: '100%', fontSize: 12 }}>
+                  <thead>
+                    <tr>
+                      {['Month', 'Hypothetical CCB', 'Actual CCB', 'Export Cost', 'Actual Total', 'Monthly Saving'].map(h => (
+                        <th key={h} style={{ textAlign: h === 'Month' ? 'left' : 'right', paddingBottom: 8, color: 'var(--text2)', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {clMonths.slice(-8).map((m, rawIdx) => {
+                      const i      = clMonths.length - Math.min(clMonths.length, 8) + rawIdx;
+                      const hypo   = hypotheticalByMonth[i] || 0;
+                      const actCCB = actualCCBByMonth[i]    || 0;
+                      const exp    = actualExportByMonth[i]  || 0;
+                      const act    = actualTotalByMonth[i]   || 0;
+                      const sav    = hypo - act;
+                      return (
+                        <tr key={m} style={{ borderTop: '1px solid var(--border)' }}>
+                          <td style={{ paddingTop: 8, paddingBottom: 8, color: 'var(--text)', fontWeight: 500 }}>
+                            {monthLabel(m)}{data.partialMonths.includes(m) ? ' *' : ''}
+                          </td>
+                          <td style={{ textAlign: 'right', color: '#f85149' }}>{fmt(hypo)}</td>
+                          <td style={{ textAlign: 'right', color: '#58a6ff' }}>{fmt(actCCB)}</td>
+                          <td style={{ textAlign: 'right', color: '#d29922' }}>{exp > 0 ? fmt(exp) : '—'}</td>
+                          <td style={{ textAlign: 'right', color: '#3fb950', fontWeight: 600 }}>{fmt(act)}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 700, color: sav >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                            {sav >= 0 ? '+' : ''}{fmt(sav)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ borderTop: '2px solid var(--border)' }}>
+                      <td style={{ paddingTop: 10, fontWeight: 700, color: 'var(--text)' }}>All Months Total</td>
+                      <td style={{ textAlign: 'right', fontWeight: 700, color: '#f85149', paddingTop: 10 }}>{fmt(totalHypothetical)}</td>
+                      <td colSpan={2}></td>
+                      <td style={{ textAlign: 'right', fontWeight: 700, color: '#3fb950', paddingTop: 10 }}>{fmt(totalActual)}</td>
+                      <td style={{ textAlign: 'right', fontWeight: 800, fontSize: 14, color: 'var(--green)', paddingTop: 10 }}>+{fmt(totalSavings)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+                {data.partialMonths.length > 0 && (
+                  <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 8 }}>* Partial month — invoice not yet complete</div>
+                )}
+              </div>
 
               {/* Key Insight */}
               <div style={{ marginTop: 16, background: 'var(--surface2)', borderRadius: 8, padding: 14, fontSize: 12, color: 'var(--text2)', lineHeight: 1.8 }}>
-                <strong style={{ color: 'var(--text)' }}>Key Insight: </strong>
-                S3 storage costs {fmt(md.exportUpload)}/month to upload but exports are incremental — once a snapshot is in S3, the per-GB/month AWS storage cost is ~$0.023/GB vs Atlas CCB Tier 4 at ~$0.25–$0.40/GB/month.
-                That&apos;s a <strong style={{ color: 'var(--green)' }}>10–17× storage cost reduction</strong> for long-term retention.
-                Reducing Atlas CCB retention to 3 days covers operational PITR needs; S3 covers compliance and disaster recovery at a fraction of the cost.
+                <strong style={{ color: 'var(--text)' }}>Latest full month: </strong>
+                Hypothetical CCB-only cost would have been <strong style={{ color: '#f85149' }}>{fmt(latestHypo)}</strong>.
+                Actual paid (CCB + Exports) was <strong style={{ color: '#3fb950' }}>{fmt(latestActual)}</strong> — saving{' '}
+                <strong style={{ color: 'var(--green)' }}>{fmt(latestSavings)}</strong> for this cluster in a single month.
+                S3 archival costs ~$0.023/GB/month vs Atlas CCB Tier 4 at ~$0.25–$0.40/GB/month —
+                a <strong style={{ color: 'var(--green)' }}>10–17× storage cost reduction</strong> for retention beyond 10 days.
               </div>
             </div>
           </div>
