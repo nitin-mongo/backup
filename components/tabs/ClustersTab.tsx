@@ -228,15 +228,6 @@ export default function ClustersTab({ data }: Props) {
           }],
         };
 
-        const compLabels = ['CCB Only\n(10-day, no export)', 'CCB 3-day\n+ S3 Exports'];
-        const compData = {
-          labels: compLabels,
-          datasets: [
-            { label: 'CCB Cost',    data: [scenA_ccb, scenB_ccb],  backgroundColor: '#58a6ff99', borderColor: '#58a6ff', borderWidth: 2, stack: 's' },
-            { label: 'Export Cost', data: [0,          scenB_exp],  backgroundColor: '#d2992299', borderColor: '#d29922', borderWidth: 2, stack: 's' },
-          ],
-        };
-
         return (
           <div style={{ marginBottom: 24 }}>
             {/* Header */}
