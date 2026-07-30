@@ -30,7 +30,7 @@ export default function ClustersTab({ data }: Props) {
 
   if (cluster === 'ALL') {
     const top8 = sorted.slice(0, 8);
-    chartTitle = 'Top 8 Clusters — ' + { total: 'Total Cost', ccb: 'CCB', totalExport: 'Export Cost', avgBackupGB: 'Backup Storage', avgDataGB: 'Data Size' }[metric];
+    chartTitle = 'Top 8 Clusters — ' + { total: 'Total Cost', ccb: 'CCB', totalExport: 'Export Cost', avgBackupGB: 'Backup Storage', avgDataGB: 'Provisioned Disk' }[metric];
     chartData = {
       labels: ml,
       datasets: top8.map((c, i) => ({
@@ -73,7 +73,7 @@ export default function ClustersTab({ data }: Props) {
             options: [
               { value: 'total', label: 'Total Backup Cost' }, { value: 'ccb', label: 'CCB Cost Only' },
               { value: 'totalExport', label: 'Export Cost Only' }, { value: 'avgBackupGB', label: 'Backup Storage (GB)' },
-              { value: 'avgDataGB', label: 'Data Size (GB)' },
+              { value: 'avgDataGB', label: 'Provisioned Disk (GB)' },
             ]
           },
           {
@@ -268,7 +268,7 @@ export default function ClustersTab({ data }: Props) {
                 {/* Data GB */}
                 <div style={{ background: 'var(--surface2)', borderRadius: 10, padding: 16 }}>
                   <div style={{ fontSize: 12, color: 'var(--orange)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 10 }}>
-                    Data GB · {md.avgDataGB.toLocaleString()} GB/day avg
+                    Provisioned Disk · {md.avgDataGB.toLocaleString()} GB/day avg
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.8 }}>
                     <strong style={{ color: 'var(--text)' }}>Source SKU:</strong> Standard Storage / Provisioned IOPS Storage<br/>
@@ -300,8 +300,8 @@ export default function ClustersTab({ data }: Props) {
                     </div>
                   ))}
                 </div>
-                <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text2)' }}>
-                  Note: Estimated from invoice GB-days. Verify exact count in Atlas → Cluster → Backup → Total Snapshots.
+                <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text2)', lineHeight: 1.6 }}>
+                  ⚠ <strong style={{ color: 'var(--orange)' }}>Full snapshot proxy uses per-node provisioned disk</strong> (from invoice Standard Storage SKU). Actual snapshot size = disk <em>Used Size</em>, which is typically 20–30% lower than provisioned. Check Atlas UI → Metrics → Disk Space Used for the real figure. Verify exact snapshot count in Atlas → Cluster → Backup.
                 </div>
               </div>
             </div>

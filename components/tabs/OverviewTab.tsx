@@ -31,7 +31,7 @@ export default function OverviewTab({ data }: Props) {
     labels: ml,
     datasets: [
       { label: 'Backup Storage', data: ga('avgBackupGB'), borderColor: '#58a6ff', backgroundColor: 'rgba(88,166,255,.1)', fill: true, tension: 0.3 },
-      { label: 'Data Size', data: ga('avgDataGB'), borderColor: '#3fb950', backgroundColor: 'rgba(63,185,80,.1)', fill: true, tension: 0.3 },
+      { label: 'Provisioned Disk', data: ga('avgDataGB'), borderColor: '#3fb950', backgroundColor: 'rgba(63,185,80,.1)', fill: true, tension: 0.3 },
     ],
   };
 
@@ -64,10 +64,10 @@ export default function OverviewTab({ data }: Props) {
         <Card title="Monthly Backup Cost Trend (Atlas Charges)">
           <ChartWrapper type="bar" data={costTrendData} options={{ plugins: { tooltip: { callbacks: { label: (c) => c.dataset.label + ': ' + fmt(c.raw as number) } }, legend: legendBottom }, scales: { y: { ticks: yTickK, grid: gridY }, x: { grid: gridX } } }} />
         </Card>
-        <Card title="Backup Storage vs Data Size (GB)">
+        <Card title="Backup Storage vs Provisioned Disk (GB)">
           <ChartWrapper type="line" data={storageTrendData} options={{ plugins: { tooltip: { callbacks: { label: (c) => c.dataset.label + ': ' + Math.round(c.raw as number).toLocaleString() + ' GB' } }, legend: legendBottom }, scales: { y: { ticks: yTickKgb, grid: gridY }, x: { grid: gridX } } }} />
         </Card>
-        <Card title="Backup-to-Data Ratio (Snapshot Overhead)">
+        <Card title="Backup:Prov. Disk Ratio (Snapshot Overhead)">
           <ChartWrapper type="line" data={ratioData} options={{ plugins: { tooltip: { callbacks: { label: (c) => (c.raw as number).toFixed(2) + '× overhead' } }, legend: { display: false } }, scales: { y: { ticks: { callback: (v) => Number(v).toFixed(1) + '×' }, grid: gridY }, x: { grid: gridX } } }} />
         </Card>
         <Card title="Cost Composition Over Time">
@@ -84,7 +84,7 @@ export default function OverviewTab({ data }: Props) {
             <thead>
               <tr>
                 <th>Month</th><th>CCB</th><th>Cloud Backup</th><th>S3 Export</th>
-                <th>Total</th><th>Backup GB</th><th>Data GB</th><th>Ratio</th>
+                <th>Total</th><th>Backup GB</th><th>Prov. Disk GB ⁽¹⁾</th><th>Ratio ⁽¹⁾</th>
               </tr>
             </thead>
             <tbody>
@@ -107,6 +107,9 @@ export default function OverviewTab({ data }: Props) {
               })}
             </tbody>
           </table>
+        </div>
+        <div style={{ padding: '8px 20px 12px', fontSize: 11, color: 'var(--text2)' }}>
+          ⁽¹⁾ <strong>Prov. Disk GB</strong> = provisioned (allocated) disk size across all nodes (from Standard Storage / IOPS SKU, billed in GB-hours). <strong>Ratio</strong> = Backup GB ÷ Prov. Disk GB. Note: actual disk Used Size is typically 20–30% lower than provisioned, so the real Backup:Used-Disk ratio is proportionally higher.
         </div>
       </div>
     </div>

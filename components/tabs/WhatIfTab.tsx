@@ -55,13 +55,13 @@ export default function WhatIfTab({ data }: Props) {
             <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: '12px 16px', flex: 1 }}>
               <div style={{ fontSize: 11, color: 'var(--text2)' }}>Pre-Opt Ratio</div>
               <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text)' }}>{wi.backupRatioPre}×</div>
-              <div style={{ fontSize: 11, color: 'var(--text2)' }}>Backup storage per GB data</div>
+              <div style={{ fontSize: 11, color: 'var(--text2)' }}>Backup GB per GB provisioned disk</div>
             </div>
             <span style={{ color: 'var(--text2)', fontSize: 18 }}>→</span>
             <div style={{ background: 'var(--surface2)', borderRadius: 8, padding: '12px 16px', flex: 1 }}>
               <div style={{ fontSize: 11, color: 'var(--text2)' }}>Post-Opt Ratio</div>
               <div style={{ fontSize: 18, fontWeight: 600 }} className="pos">{wi.backupRatioPost}×</div>
-              <div style={{ fontSize: 11, color: 'var(--text2)' }}>Backup storage per GB data</div>
+              <div style={{ fontSize: 11, color: 'var(--text2)' }}>Backup GB per GB provisioned disk</div>
             </div>
           </div>
           <div style={{ marginTop: 16, padding: 16, background: 'var(--surface2)', borderRadius: 8 }}>
@@ -90,7 +90,7 @@ export default function WhatIfTab({ data }: Props) {
         <div className="scr">
           <table>
             <thead><tr>
-              <th>Cluster</th><th>Pre-Opt Avg CCB</th><th>Pre Data GB</th><th>Jun Data GB</th>
+              <th>Cluster</th><th>Pre-Opt Avg CCB</th><th>Pre Prov. Disk GB</th><th>Jun Prov. Disk GB</th>
               <th>Growth</th><th>Hypothetical</th><th>Actual Total</th><th>Savings</th>
             </tr></thead>
             <tbody>

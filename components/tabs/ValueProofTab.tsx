@@ -41,7 +41,7 @@ export default function ValueProofTab() {
     labels: ratioLabels,
     datasets: [
       {
-        label: 'Actual Backup:Data Ratio',
+        label: 'Actual Backup:Prov.Disk Ratio',
         data: actualRatioData,
         borderColor: '#58a6ff',
         backgroundColor: 'rgba(88,166,255,.15)',
@@ -129,7 +129,7 @@ export default function ValueProofTab() {
     labels: allMonths.map(monthLabel),
     datasets: [
       {
-        label: 'Actual Data Size (indexed, Jan\'25 = 100)',
+        label: 'Actual Provisioned Disk (indexed, Jan\'25 = 100)',
         data: allMonths.map(m => hist[m] ? +(hist[m].dataGB / 116212 * 100).toFixed(1) : null),
         borderColor: '#d29922',
         tension: 0.3,
