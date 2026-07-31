@@ -31,17 +31,18 @@ const yK = { callback: (v: unknown) => '$' + (Number(v) / 1000).toFixed(0) + 'K'
 export default function OverviewTab({ data }: Props) {
   const { months, clusters, monthly_totals: mt, partialMonths } = data;
 
-  // ── Hypothetical CCB-only cost per month ──
-  // Before optimisation: hypothetical = actual (old CCB policy was in effect, no exports)
-  // From OPT_START onwards: scale each cluster's pre-opt CCB rate by its actual month-over-month data growth
-  const hypotheticalPerMonth: number[] = months.map(m => {
-    if (m < OPT_START) return mt[m]?.total || 0; // old policy was in effect — actual = hypothetical
-    return clusters.reduce((sum, cl) => {
+  // ── Projected CCB-only cost per month (old retention policy, no exports, ever) ──
+  // For every month: scale each cluster's pre-opt CCB rate by that month's actual data growth.
+  // Pre-optimisation months: projected ≈ actual (same policy was in effect).
+  // Post-optimisation months: projected > actual (CCB was reduced + exports added at lower cost).
+  // The gap after Jan 2026 = saving delivered by the CCB + S3 Export strategy.
+  const hypotheticalPerMonth: number[] = months.map(m =>
+    clusters.reduce((sum, cl) => {
       if (!cl.whatIf || !cl.whatIf.preAvgData) return sum + (cl.months[m]?.ccb || 0);
       const mData = cl.months[m]?.avgDataGB || 0;
       return sum + (cl.whatIf.preAvgCCB * mData) / cl.whatIf.preAvgData;
-    }, 0);
-  });
+    }, 0)
+  );
 
   const actualPerMonth    = months.map(m => mt[m]?.total || 0);
   const actualCCBPerMonth = months.map(m => mt[m]?.ccb || 0);
@@ -134,9 +135,9 @@ export default function OverviewTab({ data }: Props) {
           What You Would Have Paid vs What You Actually Paid
         </h3>
         <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 20, lineHeight: 1.7 }}>
-          The <span style={{ color: '#f85149', fontWeight: 600 }}>red line</span> shows the estimated cost had Darwinbox stayed on the old CCB-only retention policy,
-          scaled month-by-month by actual data growth. The <span style={{ color: '#3fb950', fontWeight: 600 }}>green shaded area</span> is what was actually charged
-          (CCB + S3 Export). The gap from Jan 2026 onwards is the saving delivered by the strategy.
+          The <span style={{ color: '#f85149', fontWeight: 600 }}>red line</span> is the projected CCB cost at the pre-optimisation retention rate, scaled by actual data growth each month.
+          The <span style={{ color: '#3fb950', fontWeight: 600 }}>green shaded area</span> is what was actually charged (CCB + S3 Export combined).
+          The two lines track closely before Jan 2026 (same old policy). From Jan 2026 the gap opens — that is the monthly saving delivered by switching to CCB + S3 Export.
         </p>
         <ChartWrapper type="line" data={convictionChart as never} height={320} options={{
           plugins: {
@@ -203,7 +204,7 @@ export default function OverviewTab({ data }: Props) {
           <table>
             <thead>
               <tr>
-                {['Month', 'CCB-Only Estimate', 'Actual CCB', 'S3 Export', 'Total Actual', 'Monthly Saving', 'Backup GB', 'Used Disk GB', 'Ratio'].map(h => (
+                {['Month', 'Projected CCB-Only', 'Actual CCB', 'S3 Export', 'Total Actual', 'Monthly Saving', 'Backup GB', 'Prov. Disk/Node', 'Used Disk/Node', 'Ratio'].map(h => (
                   <th key={h} style={{ textAlign: h === 'Month' ? 'left' : 'right', whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -216,6 +217,7 @@ export default function OverviewTab({ data }: Props) {
                 const usedGB  = USED_DISK_GB[m] || 0;
                 const bkpGB   = mt[m]?.avgBackupGB || 0;
                 const ratio   = usedGB > 0 ? (bkpGB / usedGB).toFixed(2) : '-';
+                const provPerNode = Math.round((mt[m]?.avgDataGB || 0) / 3);
                 const isOpt   = m >= OPT_START;
                 const showSav = isOpt && Math.abs(saving) > 500;
                 const isPartial = partialMonths.includes(m);
@@ -230,6 +232,7 @@ export default function OverviewTab({ data }: Props) {
                       {showSav ? (saving >= 0 ? '+' : '') + fmt(saving) : '—'}
                     </td>
                     <td style={{ textAlign: 'right', color: 'var(--text2)' }}>{Math.round(bkpGB).toLocaleString()}</td>
+                    <td style={{ textAlign: 'right', color: 'var(--text2)' }}>{provPerNode.toLocaleString()}</td>
                     <td style={{ textAlign: 'right', color: 'var(--text2)' }}>{usedGB > 0 ? Math.round(usedGB).toLocaleString() : '—'}</td>
                     <td style={{ textAlign: 'right' }}>{ratio !== '-' ? `${ratio}×` : '—'}</td>
                   </tr>
@@ -243,16 +246,17 @@ export default function OverviewTab({ data }: Props) {
                 <td colSpan={2}></td>
                 <td style={{ textAlign: 'right', fontWeight: 700, color: '#3fb950', paddingTop: 10 }}>{fmt(totalActual)}</td>
                 <td style={{ textAlign: 'right', fontWeight: 800, fontSize: 14, color: 'var(--green)', paddingTop: 10 }}>+{fmt(totalSavings)}</td>
-                <td colSpan={3}></td>
+                <td colSpan={4}></td>
               </tr>
             </tfoot>
           </table>
         </div>
         <div style={{ padding: '8px 20px 14px', fontSize: 11, color: 'var(--text2)', lineHeight: 1.7 }}>
           * Partial month (invoice in progress). &nbsp;·&nbsp;
-          <strong>CCB-Only Estimate:</strong> each cluster's pre-optimisation CCB rate scaled by its actual data growth per month. Pre-optimisation months show actual cost (old policy was in effect). &nbsp;·&nbsp;
-          <strong>Used Disk GB:</strong> from Atlas Metrics → Disk Space Used (per-node aggregate, all clusters). &nbsp;·&nbsp;
-          <strong>Ratio</strong> = Backup GB ÷ Used Disk GB.
+          <strong>Projected CCB-Only:</strong> each cluster's pre-optimisation CCB rate scaled by that month's data growth — represents the cost had old policy continued. &nbsp;·&nbsp;
+          <strong>Prov. Disk/Node:</strong> provisioned disk per node = invoice avgDataGB ÷ 3 (3-node replica set, billed via Standard Storage SKU). &nbsp;·&nbsp;
+          <strong>Used Disk/Node:</strong> actual used disk per node, aggregated across all clusters (Atlas Metrics → Disk Space Used). &nbsp;·&nbsp;
+          <strong>Ratio</strong> = Backup GB ÷ Used Disk/Node.
         </div>
       </div>
     </div>
