@@ -305,6 +305,146 @@ export default function OverviewTab({ data }: Props) {
           <strong>Ratio</strong> = Backup GB ÷ Used Disk/Node.
         </div>
       </div>
+
+      {/* ── Projected CCB-Only: Full Calculation Audit Trail ── */}
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', marginTop: 24 }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+          <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', marginBottom: 6 }}>
+            Projected CCB-Only — Full Calculation Audit Trail
+          </h3>
+          <p style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.6 }}>
+            Step-by-step numbers behind every "Projected CCB-Only" figure. Pre-optimisation months use actual observed ratios as the baseline.
+            From Jan 2026 the ratio is projected forward at the measured pre-opt growth rate.
+          </p>
+        </div>
+
+        {/* Methodology inputs */}
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', background: 'rgba(88,166,255,.04)' }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.5px' }}>
+            Model Inputs (derived from Atlas invoice data)
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
+            {[
+              {
+                label: 'Pre-Opt Avg CCB / month',
+                val: fmt(wi?.preAvgCCB || 0),
+                sub: 'Jul – Dec 2025 average from invoices',
+              },
+              {
+                label: 'Pre-Opt Avg Backup Storage',
+                val: Math.round(wi?.preAvgBackupGB || 0).toLocaleString() + ' GB',
+                sub: 'avg backup GB across Jul–Dec 2025',
+              },
+              {
+                label: 'Effective CCB Rate / GB',
+                val: ccbPerBackupGB > 0 ? '$' + ccbPerBackupGB.toFixed(4) + '/GB/mo' : 'N/A',
+                sub: 'preAvgCCB ÷ preAvgBackupGB',
+              },
+              {
+                label: 'Ratio at Dec 2025 (baseline)',
+                val: ratioBaseline.toFixed(3) + '×',
+                sub: `growing at ${ratioMonthlyDelta > 0 ? '+' : ''}${ratioMonthlyDelta.toFixed(3)}×/month (Jul→Dec 2025 trend)`,
+              },
+            ].map((s, i) => (
+              <div key={i} style={{ background: 'var(--surface2)', borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 4 }}>{s.label}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{s.val}</div>
+                <div style={{ fontSize: 10, color: 'var(--text2)', marginTop: 4 }}>{s.sub}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 12, padding: '10px 14px', background: 'rgba(88,166,255,.08)', borderRadius: 8, fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>
+            <strong style={{ color: 'var(--text)' }}>Formula (Jan 2026 onwards): </strong>
+            Projected Ratio = {ratioBaseline.toFixed(3)} + {ratioMonthlyDelta.toFixed(3)} × N &nbsp;|&nbsp;
+            Projected Backup GB = Projected Ratio × Data GB (all nodes) &nbsp;|&nbsp;
+            Projected CCB = Projected Backup GB × ${ccbPerBackupGB.toFixed(4)}/GB &nbsp;
+            <em style={{ color: '#8b949e' }}>(where N = months since Dec 2025)</em>
+          </div>
+        </div>
+
+        {/* Per-month calculation table */}
+        <div className="scr">
+          <table>
+            <thead>
+              <tr>
+                {['Month', 'Data GB (all nodes)', 'N (months since Dec\'25)', 'Projected Ratio', 'Ratio Source', 'Projected Backup GB', 'CCB Rate /GB', 'Projected CCB', 'Actual CCB', 'Variance'].map(h => (
+                  <th key={h} style={{ textAlign: h === 'Month' || h === 'Ratio Source' ? 'left' : 'right', whiteSpace: 'nowrap', fontSize: 11 }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {months.map((m, i) => {
+                const dataGB    = mt[m]?.avgDataGB || 0;
+                const isPreOpt  = i <= baselineIdx;
+                const N         = i - baselineIdx;
+                const projRatio = isPreOpt
+                  ? (dataGB > 0 ? (mt[m]?.avgBackupGB || 0) / dataGB : 0)
+                  : ratioBaseline + ratioMonthlyDelta * N;
+                const projBackupGB = projRatio * dataGB;
+                const projCCB   = projBackupGB * ccbPerBackupGB;
+                const actualCCB = mt[m]?.ccb || 0;
+                const variance  = projCCB - actualCCB;
+                const isPartial = partialMonths.includes(m);
+                return (
+                  <tr key={m} style={{
+                    opacity: isPartial ? 0.65 : 1,
+                    background: isPreOpt ? 'rgba(255,255,255,.02)' : 'transparent',
+                  }}>
+                    <td style={{ fontWeight: 500 }}>
+                      {monthLabel(m)}{isPartial ? ' *' : ''}
+                    </td>
+                    <td style={{ textAlign: 'right', color: 'var(--text2)' }}>{dataGB > 0 ? Math.round(dataGB).toLocaleString() : '—'}</td>
+                    <td style={{ textAlign: 'right', color: 'var(--text2)' }}>{isPreOpt ? '—' : (N > 0 ? '+' : '') + N}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 600, color: isPreOpt ? 'var(--text2)' : '#f85149' }}>
+                      {dataGB > 0 ? projRatio.toFixed(3) + '×' : '—'}
+                    </td>
+                    <td style={{ color: isPreOpt ? 'var(--text2)' : '#d29922', fontSize: 11 }}>
+                      {isPreOpt
+                        ? `Actual (${Math.round(mt[m]?.avgBackupGB || 0).toLocaleString()} ÷ ${Math.round(dataGB).toLocaleString()})`
+                        : `${ratioBaseline.toFixed(3)} + ${ratioMonthlyDelta.toFixed(3)}×${N}`}
+                    </td>
+                    <td style={{ textAlign: 'right', color: 'var(--text2)' }}>{dataGB > 0 ? Math.round(projBackupGB).toLocaleString() : '—'}</td>
+                    <td style={{ textAlign: 'right', color: 'var(--text2)', fontFamily: 'monospace', fontSize: 11 }}>${ccbPerBackupGB.toFixed(4)}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 600, color: isPreOpt ? 'var(--text2)' : '#f85149' }}>{dataGB > 0 ? fmt(projCCB) : '—'}</td>
+                    <td style={{ textAlign: 'right', color: '#58a6ff' }}>{fmt(actualCCB)}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 700, color: variance > 500 ? 'var(--green)' : variance < -500 ? 'var(--red)' : 'var(--text2)' }}>
+                      {dataGB > 0 && Math.abs(variance) > 500 ? (variance > 0 ? '+' : '') + fmt(variance) : '—'}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr style={{ borderTop: '2px solid var(--border)' }}>
+                <td style={{ fontWeight: 700, paddingTop: 10 }} colSpan={7}>Total Projected CCB (all months)</td>
+                <td style={{ textAlign: 'right', fontWeight: 800, color: '#f85149', paddingTop: 10 }}>
+                  {fmt(months.reduce((s, m, i) => {
+                    const dGB = mt[m]?.avgDataGB || 0;
+                    const r = i <= baselineIdx ? (dGB > 0 ? (mt[m]?.avgBackupGB||0)/dGB : 0) : ratioBaseline + ratioMonthlyDelta*(i-baselineIdx);
+                    return s + r * dGB * ccbPerBackupGB;
+                  }, 0))}
+                </td>
+                <td style={{ textAlign: 'right', fontWeight: 800, color: '#58a6ff', paddingTop: 10 }}>
+                  {fmt(months.reduce((s, m) => s + (mt[m]?.ccb || 0), 0))}
+                </td>
+                <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--green)', paddingTop: 10, fontSize: 13 }}>
+                  +{fmt(months.reduce((s, m, i) => {
+                    if (m < OPT_START) return s;
+                    const dGB = mt[m]?.avgDataGB || 0;
+                    const r = i <= baselineIdx ? (dGB > 0 ? (mt[m]?.avgBackupGB||0)/dGB : 0) : ratioBaseline + ratioMonthlyDelta*(i-baselineIdx);
+                    return s + Math.max(r * dGB * ccbPerBackupGB - (mt[m]?.total||0), 0);
+                  }, 0))}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div style={{ padding: '8px 20px 14px', fontSize: 11, color: 'var(--text2)', lineHeight: 1.7 }}>
+          <strong>Variance</strong> = Projected CCB − Actual CCB (positive = saving vs what would have been charged under old policy). &nbsp;·&nbsp;
+          Pre-optimisation rows (shaded) use the actual observed ratio — this is the measured baseline, not a projection. &nbsp;·&nbsp;
+          * Partial month.
+        </div>
+      </div>
     </div>
   );
 }
