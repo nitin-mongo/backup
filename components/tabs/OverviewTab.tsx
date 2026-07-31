@@ -29,20 +29,64 @@ const GRID = '#21262d';
 const yK = { callback: (v: unknown) => '$' + (Number(v) / 1000).toFixed(0) + 'K' };
 
 export default function OverviewTab({ data }: Props) {
-  const { months, clusters, monthly_totals: mt, partialMonths } = data;
+  const { months, monthly_totals: mt, partialMonths } = data;
+  const wi = data.whatIfTotal;
 
-  // ── Projected CCB-only cost per month (old retention policy, no exports, ever) ──
-  // For every month: scale each cluster's pre-opt CCB rate by that month's actual data growth.
-  // Pre-optimisation months: projected ≈ actual (same policy was in effect).
-  // Post-optimisation months: projected > actual (CCB was reduced + exports added at lower cost).
-  // The gap after Jan 2026 = saving delivered by the CCB + S3 Export strategy.
-  const hypotheticalPerMonth: number[] = months.map(m =>
-    clusters.reduce((sum, cl) => {
-      if (!cl.whatIf || !cl.whatIf.preAvgData) return sum + (cl.months[m]?.ccb || 0);
-      const mData = cl.months[m]?.avgDataGB || 0;
-      return sum + (cl.whatIf.preAvgCCB * mData) / cl.whatIf.preAvgData;
-    }, 0)
-  );
+  // ── Projected CCB-Only: ratio-growth model ──
+  // Under the old retention policy, the backup-to-data ratio was INCREASING every month
+  // (more data → more snapshots accumulating → higher ratio).
+  // Steps:
+  //   1. Extract actual monthly ratio (backup GB / data GB) from the pre-opt period (Jul–Dec 2025)
+  //   2. Fit a linear trend to that ratio (how fast it was growing per month)
+  //   3. Project the ratio forward for post-opt months
+  //   4. projectedBackupGB = projectedRatio × dataGB
+  //   5. projectedCCB      = projectedBackupGB × effectiveCCBRatePerBackupGB
+  //
+  // This gives a much higher projected CCB than simple data-scaling because the ratio
+  // itself compounds with data growth.
+
+  const PRE_OPT_END = '2025-12'; // Dec 2025 = last month of old policy
+
+  // Effective CCB rate per GB of backup storage ($/GB/month) derived from pre-opt average
+  const ccbPerBackupGB = (wi?.preAvgBackupGB || 0) > 0
+    ? (wi.preAvgCCB || 0) / wi.preAvgBackupGB
+    : 0;
+
+  // Actual monthly ratio for each pre-opt month
+  const preOptMonths  = months.filter(m => m >= '2025-07' && m <= PRE_OPT_END);
+  const preOptRatios  = preOptMonths
+    .map(m => (mt[m]?.avgDataGB || 0) > 0 ? (mt[m].avgBackupGB || 0) / mt[m].avgDataGB : 0)
+    .filter(r => r > 0);
+
+  // Monthly growth rate of ratio (rise/run over pre-opt period)
+  const ratioMonthlyDelta = preOptRatios.length >= 2
+    ? (preOptRatios[preOptRatios.length - 1] - preOptRatios[0]) / (preOptRatios.length - 1)
+    : 0.15; // fallback: ~0.15×/month observed historically
+
+  // Ratio at end of pre-opt period (projection baseline)
+  const ratioBaseline  = preOptRatios.length > 0
+    ? preOptRatios[preOptRatios.length - 1]
+    : (wi?.backupRatioPre || 4.6);
+
+  const baselineIdx = months.indexOf(PRE_OPT_END) >= 0
+    ? months.indexOf(PRE_OPT_END)
+    : months.filter(m => m <= PRE_OPT_END).length - 1;
+
+  const hypotheticalPerMonth: number[] = months.map((m, i) => {
+    const dataGB = mt[m]?.avgDataGB || 0;
+    if (!dataGB) return 0;
+
+    let projectedRatio: number;
+    if (i <= baselineIdx) {
+      // Pre-optimisation: use the actual observed ratio for that month
+      projectedRatio = (mt[m].avgBackupGB || 0) / dataGB;
+    } else {
+      // Post-optimisation: ratio would have kept growing at pre-opt trend rate
+      projectedRatio = ratioBaseline + ratioMonthlyDelta * (i - baselineIdx);
+    }
+
+    return projectedRatio * dataGB * ccbPerBackupGB;
+  });
 
   const actualPerMonth    = months.map(m => mt[m]?.total || 0);
   const actualCCBPerMonth = months.map(m => mt[m]?.ccb || 0);
@@ -135,9 +179,11 @@ export default function OverviewTab({ data }: Props) {
           What You Would Have Paid vs What You Actually Paid
         </h3>
         <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 20, lineHeight: 1.7 }}>
-          The <span style={{ color: '#f85149', fontWeight: 600 }}>red line</span> is the projected CCB cost at the pre-optimisation retention rate, scaled by actual data growth each month.
-          The <span style={{ color: '#3fb950', fontWeight: 600 }}>green shaded area</span> is what was actually charged (CCB + S3 Export combined).
-          The two lines track closely before Jan 2026 (same old policy). From Jan 2026 the gap opens — that is the monthly saving delivered by switching to CCB + S3 Export.
+          Under the old CCB-only policy, the <strong style={{ color: '#e6edf3' }}>backup-to-data ratio was growing</strong> every month as more snapshots accumulated.
+          The <span style={{ color: '#f85149', fontWeight: 600 }}>red line</span> projects what CCB would have cost had that trend continued —
+          using the actual pre-optimisation ratio growth rate ({ratioMonthlyDelta > 0 ? '+' : ''}{ratioMonthlyDelta.toFixed(2)}×/month observed Jul–Dec 2025),
+          applied to each month's actual data size. The <span style={{ color: '#3fb950', fontWeight: 600 }}>green shaded area</span> is what was actually charged
+          (CCB + S3 Export). The gap that opens from Jan 2026 is the saving delivered by the strategy.
         </p>
         <ChartWrapper type="line" data={convictionChart as never} height={320} options={{
           plugins: {
@@ -253,9 +299,9 @@ export default function OverviewTab({ data }: Props) {
         </div>
         <div style={{ padding: '8px 20px 14px', fontSize: 11, color: 'var(--text2)', lineHeight: 1.7 }}>
           * Partial month (invoice in progress). &nbsp;·&nbsp;
-          <strong>Projected CCB-Only:</strong> each cluster's pre-optimisation CCB rate scaled by that month's data growth — represents the cost had old policy continued. &nbsp;·&nbsp;
-          <strong>Prov. Disk/Node:</strong> provisioned disk per node = invoice avgDataGB ÷ 3 (3-node replica set, billed via Standard Storage SKU). &nbsp;·&nbsp;
-          <strong>Used Disk/Node:</strong> actual used disk per node, aggregated across all clusters (Atlas Metrics → Disk Space Used). &nbsp;·&nbsp;
+          <strong>Projected CCB-Only:</strong> actual observed ratio (backup/data) for pre-opt months; for Jan 2026 onwards, ratio is projected forward at the pre-opt monthly growth rate ({ratioMonthlyDelta > 0 ? '+' : ''}{ratioMonthlyDelta.toFixed(2)}×/month). Cost = projectedRatio × dataGB × CCBrate/GB. &nbsp;·&nbsp;
+          <strong>Prov. Disk/Node:</strong> invoice avgDataGB ÷ 3 (3-node RS). &nbsp;·&nbsp;
+          <strong>Used Disk/Node:</strong> Atlas Metrics → Disk Space Used (all clusters, per-node). &nbsp;·&nbsp;
           <strong>Ratio</strong> = Backup GB ÷ Used Disk/Node.
         </div>
       </div>
