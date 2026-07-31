@@ -141,7 +141,7 @@ export default function OverviewTab({ data }: Props) {
         <ChartWrapper type="line" data={convictionChart as never} height={320} options={{
           plugins: {
             legend: { position: 'bottom' as const, labels: { boxWidth: 10, font: { size: 11 } } },
-            tooltip: { callbacks: { label: (c: { dataset: { label: string }; raw: unknown }) => c.dataset.label + ': ' + fmt(c.raw as number) } },
+            tooltip: { callbacks: { label: (c: any) => (c.dataset.label ?? '') + ': ' + fmt(c.raw as number) } },
           },
           scales: {
             y: { ticks: yK, grid: { color: GRID } },
@@ -160,10 +160,10 @@ export default function OverviewTab({ data }: Props) {
           <ChartWrapper type="bar" data={breakdownChart} height={220} options={{
             plugins: {
               legend: { position: 'bottom' as const, labels: { boxWidth: 10 } },
-              tooltip: { callbacks: { label: (c: { dataset: { label: string }; raw: unknown }) => c.dataset.label + ': ' + fmt(c.raw as number) } },
+              tooltip: { callbacks: { label: (c: any) => (c.dataset.label ?? '') + ': ' + fmt(c.raw as number) } },
             },
             scales: { y: { ticks: yK, grid: { color: GRID } }, x: { grid: { display: false } } },
-          }} />
+          } as never} />
         </div>
 
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
