@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { DashboardData } from '@/lib/types';
 import { fmt, monthLabel } from '@/lib/formatters';
@@ -92,20 +93,38 @@ export default function OverviewTab({ data }: Props) {
   const actualCCBPerMonth = months.map(m => mt[m]?.ccb || 0);
   const exportPerMonth    = months.map(m => mt[m]?.totalExport || 0);
 
-  // Savings only counted from when the optimisation started
-  const totalSavings = months.reduce((sum, m, i) =>
-    m >= OPT_START ? sum + Math.max(hypotheticalPerMonth[i] - actualPerMonth[i], 0) : sum, 0);
+  // ── 20% Enterprise Discount toggle (from Jan 2026) ──
+  const [discountOn, setDiscountOn] = useState(false);
+  const DISC = 0.20;
 
-  const totalHypo   = hypotheticalPerMonth.reduce((a, b) => a + b, 0);
+  // Full-rate hypothetical (always computed — used as reference line in chart)
+  const hypoFull = hypotheticalPerMonth;
+  // Discount-adjusted: apply 20% off to post-OPT_START months when toggle is ON
+  const hypoAdj = hypotheticalPerMonth.map((v, i) =>
+    discountOn && months[i] >= OPT_START ? v * (1 - DISC) : v
+  );
+
+  // The discount value itself (full - discounted) per month
+  const discValuePerMonth = hypotheticalPerMonth.map((v, i) =>
+    months[i] >= OPT_START ? v * DISC : 0
+  );
+  const totalDiscValue  = discValuePerMonth.reduce((a, b) => a + b, 0);
+
   const totalActual = actualPerMonth.reduce((a, b) => a + b, 0);
+
+  // Stats use the active (possibly discounted) projection
+  const totalSavings = months.reduce((sum, m, i) =>
+    m >= OPT_START ? sum + Math.max(hypoAdj[i] - actualPerMonth[i], 0) : sum, 0);
+  const totalHypo = hypoAdj.reduce((a, b) => a + b, 0);
 
   // Latest completed (non-partial) month
   const latestFull = [...months].reverse().find(m => !partialMonths.includes(m) && (mt[m]?.total || 0) > 0) || months[months.length - 2];
   const latestIdx  = months.indexOf(latestFull);
-  const latestHypo   = hypotheticalPerMonth[latestIdx] || 0;
+  const latestHypo   = hypoAdj[latestIdx] || 0;
   const latestActual = actualPerMonth[latestIdx] || 0;
   const latestSaving = Math.max(latestHypo - latestActual, 0);
   const savingsPct   = latestHypo > 0 ? Math.round((latestSaving / latestHypo) * 100) : 0;
+  const latestDiscValue = discValuePerMonth[latestIdx] || 0;
 
   // ── Disk metrics for latest month ──
   const latestUsedGB  = USED_DISK_GB[latestFull] || 0;
@@ -120,11 +139,22 @@ export default function OverviewTab({ data }: Props) {
   const convictionChart = {
     labels: ml,
     datasets: [
+      // When discount is ON: show full-rate line as dashed reference
+      ...(discountOn ? [{
+        label: 'Projected CCB-Only (old policy, no discount — reference)',
+        data: hypoFull,
+        borderColor: 'rgba(248,81,73,0.45)',
+        backgroundColor: 'transparent',
+        borderDash: [6, 4],
+        tension: 0.3, pointRadius: 2, fill: false,
+      }] : []),
       {
-        label: 'Hypothetical: CCB-Only (old retention policy)',
-        data: hypotheticalPerMonth,
-        borderColor: '#f85149',
-        backgroundColor: 'rgba(248,81,73,0.08)',
+        label: discountOn
+          ? 'Projected CCB-Only (old policy + 20% enterprise discount)'
+          : 'Projected CCB-Only (old policy, full rate)',
+        data: hypoAdj,
+        borderColor: discountOn ? '#d29922' : '#f85149',
+        backgroundColor: discountOn ? 'rgba(210,153,34,0.08)' : 'rgba(248,81,73,0.08)',
         tension: 0.3, pointRadius: 3, fill: false,
       },
       {
@@ -152,25 +182,60 @@ export default function OverviewTab({ data }: Props) {
         <h2 style={{ fontSize: 17, color: '#58a6ff', fontWeight: 700, marginBottom: 6 }}>
           Atlas Backup Optimisation — Verified Savings for Darwinbox
         </h2>
-        <p style={{ color: '#aab4be', fontSize: 13, lineHeight: 1.75, maxWidth: 860, marginBottom: 24 }}>
-          By moving from a pure <strong style={{ color: '#f85149' }}>Continuous Cloud Backup (CCB)</strong> retention policy to a hybrid{' '}
-          <strong style={{ color: '#3fb950' }}>CCB + S3 Export</strong> strategy in early 2026, Darwinbox has significantly reduced backup costs
-          while handling data growth. Every number below comes directly from MongoDB Atlas invoice data.
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
+          <p style={{ color: '#aab4be', fontSize: 13, lineHeight: 1.75, maxWidth: 780, margin: 0 }}>
+            By moving from a pure <strong style={{ color: '#f85149' }}>Continuous Cloud Backup (CCB)</strong> retention policy to a hybrid{' '}
+            <strong style={{ color: '#3fb950' }}>CCB + S3 Export</strong> strategy in early 2026, Darwinbox has significantly reduced backup costs
+            while handling data growth. Every number below comes directly from MongoDB Atlas invoice data.
+          </p>
+          {/* 20% Discount Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,.06)', borderRadius: 8, padding: '8px 14px', border: '1px solid rgba(255,255,255,.1)', flexShrink: 0 }}>
+            <span style={{ fontSize: 12, color: '#aab4be', whiteSpace: 'nowrap' }}>20% Enterprise Discount<br/><span style={{ fontSize: 10, color: '#8b949e' }}>applied from Jan 2026</span></span>
+            <button
+              onClick={() => setDiscountOn(d => !d)}
+              style={{
+                width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', position: 'relative',
+                background: discountOn ? '#3fb950' : '#30363d', transition: 'background .2s',
+              }}
+            >
+              <span style={{
+                position: 'absolute', top: 3, left: discountOn ? 23 : 3,
+                width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left .2s',
+              }} />
+            </button>
+            <span style={{ fontSize: 12, fontWeight: 700, color: discountOn ? '#3fb950' : '#8b949e', minWidth: 24 }}>
+              {discountOn ? 'ON' : 'OFF'}
+            </span>
+          </div>
+        </div>
+
+        {/* Stat cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: discountOn ? 'repeat(5,1fr)' : 'repeat(4,1fr)', gap: 14 }}>
           {[
-            { label: 'Total Savings Since Optimisation', val: fmt(totalSavings), sub: `Jan 2026 → ${monthLabel(latestFull)} vs CCB-only baseline`, color: '#3fb950', big: true },
-            { label: 'Saving This Month', val: fmt(latestSaving), sub: `${savingsPct}% less than CCB-only would have cost`, color: '#3fb950', big: false },
+            { label: discountOn ? 'Strategy Saving (excl. discount)' : 'Total Savings Since Optimisation', val: fmt(totalSavings), sub: discountOn ? `export policy saving vs CCB-only (discounted)` : `Jan 2026 → ${monthLabel(latestFull)} vs CCB-only baseline`, color: '#3fb950', big: true },
+            ...(discountOn ? [{ label: 'Enterprise Discount Value (20%)', val: fmt(totalDiscValue), sub: `Jan 2026 → ${monthLabel(latestFull)} · 20% off projected CCB`, color: '#bc8cff', big: false }] : []),
+            { label: 'Saving This Month', val: fmt(latestSaving), sub: `${savingsPct}% less than ${discountOn ? 'discounted ' : ''}CCB-only`, color: '#3fb950', big: false },
             { label: 'Annualised Saving', val: fmt(latestSaving * 12), sub: 'projected at current monthly run-rate', color: '#58a6ff', big: false },
-            { label: 'CCB-Only Would Have Cost', val: fmt(latestHypo), sub: `Actual charged: ${fmt(latestActual)} (${monthLabel(latestFull)})`, color: '#f85149', big: false },
+            { label: discountOn ? 'CCB-Only (with discount) Would Have Cost' : 'CCB-Only Would Have Cost', val: fmt(latestHypo), sub: `Actual charged: ${fmt(latestActual)} (${monthLabel(latestFull)})${discountOn ? ` · Full rate: ${fmt(hypoFull[latestIdx] || 0)}` : ''}`, color: discountOn ? '#d29922' : '#f85149', big: false },
           ].map((s, i) => (
-            <div key={i} style={{ background: 'rgba(255,255,255,.04)', borderRadius: 10, padding: 18, borderTop: `3px solid ${s.color}` }}>
+            <div key={i} style={{ background: 'rgba(255,255,255,.04)', borderRadius: 10, padding: 16, borderTop: `3px solid ${s.color}` }}>
               <div style={{ fontSize: 11, color: '#8b949e', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>{s.label}</div>
-              <div style={{ fontSize: s.big ? 26 : 20, fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.val}</div>
+              <div style={{ fontSize: s.big ? 24 : 18, fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.val}</div>
               <div style={{ fontSize: 11, color: '#8b949e', marginTop: 8, lineHeight: 1.5 }}>{s.sub}</div>
             </div>
           ))}
         </div>
+
+        {/* Discount breakdown banner when ON */}
+        {discountOn && (
+          <div style={{ marginTop: 14, padding: '10px 16px', background: 'rgba(188,140,255,.08)', borderRadius: 8, border: '1px solid rgba(188,140,255,.2)', fontSize: 12, color: '#aab4be', lineHeight: 1.7 }}>
+            <strong style={{ color: '#bc8cff' }}>Total saving breakdown (since Jan 2026):</strong>
+            &nbsp; Export strategy = <strong style={{ color: '#3fb950' }}>{fmt(totalSavings)}</strong>
+            &nbsp;+&nbsp; Enterprise discount = <strong style={{ color: '#bc8cff' }}>{fmt(totalDiscValue)}</strong>
+            &nbsp;= <strong style={{ color: '#e6edf3' }}>{fmt(totalSavings + totalDiscValue)}</strong> total vs full-rate CCB-only.
+            &nbsp; This month: strategy <strong style={{ color: '#3fb950' }}>{fmt(latestSaving)}</strong> + discount <strong style={{ color: '#bc8cff' }}>{fmt(latestDiscValue)}</strong> = <strong style={{ color: '#e6edf3' }}>{fmt(latestSaving + latestDiscValue)}</strong>.
+          </div>
+        )}
       </div>
 
       {/* ── Conviction Chart ── */}
@@ -180,10 +245,14 @@ export default function OverviewTab({ data }: Props) {
         </h3>
         <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 20, lineHeight: 1.7 }}>
           Under the old CCB-only policy, the <strong style={{ color: '#e6edf3' }}>backup-to-data ratio was growing</strong> every month as more snapshots accumulated.
-          The <span style={{ color: '#f85149', fontWeight: 600 }}>red line</span> projects what CCB would have cost had that trend continued —
-          using the actual pre-optimisation ratio growth rate ({ratioMonthlyDelta > 0 ? '+' : ''}{ratioMonthlyDelta.toFixed(2)}×/month observed Jul–Dec 2025),
-          applied to each month's actual data size. The <span style={{ color: '#3fb950', fontWeight: 600 }}>green shaded area</span> is what was actually charged
-          (CCB + S3 Export). The gap that opens from Jan 2026 is the saving delivered by the strategy.
+          {discountOn
+            ? <> The <span style={{ color: 'rgba(248,81,73,.6)', fontWeight: 600 }}>dashed red line</span> is full-rate CCB-only (no discount).
+                The <span style={{ color: '#d29922', fontWeight: 600 }}>orange line</span> is CCB-only with the 20% enterprise discount applied from Jan 2026.
+                The <span style={{ color: '#3fb950', fontWeight: 600 }}>green area</span> is actual (CCB + Export). The gap from orange to green = export strategy saving.
+              </>
+            : <> The <span style={{ color: '#f85149', fontWeight: 600 }}>red line</span> projects what CCB would have cost at old policy rates (ratio growing at {ratioMonthlyDelta > 0 ? '+' : ''}{ratioMonthlyDelta.toFixed(2)}×/month, Jul–Dec 2025 trend).
+                The <span style={{ color: '#3fb950', fontWeight: 600 }}>green shaded area</span> is what was actually charged (CCB + S3 Export).
+              </>}
         </p>
         <ChartWrapper type="line" data={convictionChart as never} height={320} options={{
           plugins: {
@@ -257,7 +326,8 @@ export default function OverviewTab({ data }: Props) {
             </thead>
             <tbody>
               {months.map((m, i) => {
-                const hypo    = Math.round(hypotheticalPerMonth[i]);
+                const hypo    = Math.round(hypoAdj[i]);
+                const hypoRef = discountOn ? Math.round(hypoFull[i]) : null;
                 const act     = actualPerMonth[i];
                 const saving  = hypo - act;
                 const usedGB  = USED_DISK_GB[m] || 0;
@@ -270,7 +340,9 @@ export default function OverviewTab({ data }: Props) {
                 return (
                   <tr key={m} style={{ opacity: isPartial ? 0.65 : 1 }}>
                     <td style={{ fontWeight: 500 }}>{monthLabel(m)}{isPartial ? ' *' : ''}</td>
-                    <td style={{ textAlign: 'right', color: isOpt ? '#f85149' : 'var(--text2)' }}>{fmt(hypo)}</td>
+                    <td style={{ textAlign: 'right', color: isOpt ? (discountOn ? '#d29922' : '#f85149') : 'var(--text2)' }}>
+                      {fmt(hypo)}{hypoRef && isOpt ? <span style={{ fontSize: 10, color: 'rgba(248,81,73,.6)', marginLeft: 4 }}>({fmt(hypoRef)})</span> : null}
+                    </td>
                     <td style={{ textAlign: 'right', color: '#58a6ff' }}>{fmt(mt[m]?.ccb || 0)}</td>
                     <td style={{ textAlign: 'right', color: '#d29922' }}>{(mt[m]?.totalExport || 0) > 0 ? fmt(mt[m].totalExport) : '—'}</td>
                     <td style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(act)}</td>
