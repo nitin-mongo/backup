@@ -79,7 +79,7 @@ export default function ClustersTab({ data }: Props) {
           {
             label: 'Sort', value: sort, onChange: setSort,
             options: [
-              { value: 'total_desc', label: 'Total Cost (High→Low)' },
+              { value: 'total_desc', label: 'Highest Total (by selected metric)' },
               { value: 'growth_desc', label: 'Data Growth (High→Low)' },
               { value: 'savings_desc', label: 'Est. Savings (High→Low)' },
             ]
@@ -171,7 +171,13 @@ export default function ClustersTab({ data }: Props) {
         const totalSavingsPct   = totalHypothetical > 0 ? Math.round((totalSavings / totalHypothetical) * 100) : 0;
 
         // Latest full month delta
-        const latestFullIdx   = clMonths.length >= 2 ? clMonths.length - 2 : clMonths.length - 1;
+        // Find last non-partial month with data for this cluster
+        const latestFullIdx = (() => {
+          for (let idx = clMonths.length - 1; idx >= 0; idx--) {
+            if (!data.partialMonths.includes(clMonths[idx])) return idx;
+          }
+          return clMonths.length - 1;
+        })();
         const latestHypo      = hypotheticalByMonth[latestFullIdx] || 0;
         const latestActual    = actualTotalByMonth[latestFullIdx]  || 0;
         const latestSavings   = latestHypo - latestActual;

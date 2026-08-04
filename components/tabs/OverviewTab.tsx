@@ -393,45 +393,44 @@ export default function OverviewTab({ data }: Props) {
         </div>
       </div>
 
-      {/* ── Projected CCB-Only: Full Calculation Audit Trail ── */}
+      {/* ── Projected CCB-Only: Calculation Breakdown ── */}
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', marginTop: 24 }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
           <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', marginBottom: 6 }}>
-            Projected CCB-Only — Full Calculation Audit Trail
+            Projected CCB-Only — Calculation Breakdown
           </h3>
           <p style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.6 }}>
-            Step-by-step numbers behind every “Projected CCB-Only” figure from May 2026 onwards.
-            Pre-policy-change months (up to Apr 2026) use actual observed ratios as the baseline.
-            From May 2026 the ratio is projected at the Jan–Apr 2026 trend rate.
+            How each month's “Projected CCB-Only” (red line) is calculated. Jan–Apr 2026 = actual CCB ÷ 0.8 (full undiscounted rate).
+            From May 2026 the backup/data ratio is projected forward at the Jan–Apr 2026 trend, then divided by 0.8 to give the full-rate cost.
           </p>
         </div>
 
-        {/* Methodology inputs */}
+        {/* Baseline parameters */}
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', background: 'rgba(88,166,255,.04)' }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.5px' }}>
-            Model Inputs (derived from Atlas invoice data)
+            Baseline Parameters (Jan–Apr 2026 invoices)
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
             {[
-            {
+              {
                 label: 'Jan–Apr 2026 Avg CCB / month',
                 val: fmt(preOptAvgCCB),
-                sub: 'average from Jan–Apr 2026 invoices (incl. 20% discount)',
+                sub: 'avg from Jan–Apr 2026 invoices (incl. 20% enterprise discount)',
               },
               {
                 label: 'Jan–Apr 2026 Avg Backup Storage',
                 val: Math.round(preOptAvgBkGB).toLocaleString() + ' GB',
-                sub: 'avg backup GB Jan–Apr 2026 (post-data-archival baseline)',
+                sub: 'avg backup GB/month — post-data-archival, pre-policy-change',
               },
               {
                 label: 'Effective CCB Rate / GB',
                 val: ccbPerBackupGB > 0 ? '$' + ccbPerBackupGB.toFixed(4) + '/GB/mo' : 'N/A',
-                sub: 'Jan–Apr 2026 avg CCB ÷ Backup GB (incl. 20% discount)',
+                sub: 'avg CCB ÷ avg backup GB (includes 20% enterprise discount)',
               },
               {
-                label: 'Ratio at Apr 2026 (baseline)',
+                label: 'Ratio at Apr 2026 (projection start)',
                 val: ratioBaseline.toFixed(3) + '×',
-                sub: `trending at ${ratioMonthlyDelta > 0 ? '+' : ''}${ratioMonthlyDelta.toFixed(3)}×/month (Jan–Apr 2026 trend)`,
+                sub: `trend: ${ratioMonthlyDelta > 0 ? '+' : ''}${ratioMonthlyDelta.toFixed(3)}×/month over Jan–Apr 2026`,
               },
             ].map((s, i) => (
               <div key={i} style={{ background: 'var(--surface2)', borderRadius: 8, padding: 12 }}>
@@ -441,62 +440,55 @@ export default function OverviewTab({ data }: Props) {
               </div>
             ))}
           </div>
-          <div style={{ marginTop: 12, padding: '10px 14px', background: 'rgba(88,166,255,.08)', borderRadius: 8, fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>
-            <strong style={{ color: 'var(--text)' }}>Formula (May 2026 onwards): </strong>
-            Projected Ratio = {ratioBaseline.toFixed(3)} + {ratioMonthlyDelta.toFixed(3)} × N &nbsp;| 
-            Projected Backup GB = Projected Ratio × Data GB (all nodes) &nbsp;| 
-            Projected CCB = Projected Backup GB × ${ccbPerBackupGB.toFixed(4)}/GB &nbsp;
-            <em style={{ color: '#8b949e' }}>(where N = months since Apr 2026; rate already includes 20% enterprise discount)</em>
+          <div style={{ marginTop: 12, padding: '10px 14px', background: 'rgba(88,166,255,.08)', borderRadius: 8, fontSize: 12, color: 'var(--text2)', lineHeight: 1.9 }}>
+            <strong style={{ color: 'var(--text)' }}>Formula (May 2026+):</strong>
+            &nbsp; Ratio = {ratioBaseline.toFixed(3)} + ({ratioMonthlyDelta.toFixed(3)} × months since Apr 2026)
+            &nbsp;→&nbsp; Projected Backup GB = Ratio × Data GB
+            &nbsp;→&nbsp; × ${ccbPerBackupGB.toFixed(4)}/GB = Discounted CCB
+            &nbsp;→&nbsp; <strong style={{ color: '#f85149' }}>÷ 0.8 = Full-Rate CCB</strong>
+            <span style={{ color: '#8b949e' }}> (undo the 20% enterprise discount to show the true baseline cost)</span>
           </div>
         </div>
 
-        {/* Per-month calculation table */}
+        {/* Simplified per-month table */}
         <div className="scr">
           <table>
             <thead>
               <tr>
-                {['Month', 'Data GB (all nodes)', 'N (months since Apr\'26)', 'Projected Ratio', 'Ratio Source', 'Projected Backup GB', 'CCB Rate /GB', 'Projected CCB', 'Actual CCB', 'Variance'].map(h => (
-                  <th key={h} style={{ textAlign: h === 'Month' || h === 'Ratio Source' ? 'left' : 'right', whiteSpace: 'nowrap', fontSize: 11 }}>{h}</th>
+                {['Month', 'Data GB', 'Backup / Data Ratio', 'Proj. Backup GB', 'Proj. CCB (full rate)', 'Actual Paid', 'Saving'].map(h => (
+                  <th key={h} style={{ textAlign: h === 'Month' ? 'left' : 'right', whiteSpace: 'nowrap', fontSize: 11 }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {months.map((m, i) => {
                 const dataGB    = mt[m]?.avgDataGB || 0;
-                const isPreOpt  = i <= baselineIdx;
-                const N         = i - baselineIdx;
-                const projRatio = isPreOpt
-                  ? (dataGB > 0 ? (mt[m]?.avgBackupGB || 0) / dataGB : 0)
-                  : ratioBaseline + ratioMonthlyDelta * N;
-                const projBackupGB = projRatio * dataGB;
-                const projCCB   = projBackupGB * ccbPerBackupGB;
-                const actualCCB = mt[m]?.ccb || 0;
-                const variance  = projCCB - actualCCB;
+                const bkpGB     = mt[m]?.avgBackupGB || 0;
+                const isProjected = i > baselineIdx;
+                const ratio = dataGB > 0
+                  ? (isProjected
+                      ? ratioBaseline + ratioMonthlyDelta * (i - baselineIdx)
+                      : bkpGB / dataGB)
+                  : 0;
+                const projBackupGB = Math.round(ratio * dataGB);
+                // Use hypotheticalPerMonth directly — identical to what the main chart/table uses
+                const projCCB  = hypotheticalPerMonth[i];
+                const actual   = actualPerMonth[i];
+                const saving   = m >= OPT_START ? projCCB - actual : null;
                 const isPartial = partialMonths.includes(m);
                 return (
-                  <tr key={m} style={{
-                    opacity: isPartial ? 0.65 : 1,
-                    background: isPreOpt ? 'rgba(255,255,255,.02)' : 'transparent',
-                  }}>
-                    <td style={{ fontWeight: 500 }}>
-                      {monthLabel(m)}{isPartial ? ' *' : ''}
-                    </td>
+                  <tr key={m} style={{ opacity: isPartial ? 0.65 : 1, background: !isProjected ? 'rgba(255,255,255,.02)' : 'transparent' }}>
+                    <td style={{ fontWeight: 500 }}>{monthLabel(m)}{isPartial ? ' *' : ''}</td>
                     <td style={{ textAlign: 'right', color: 'var(--text2)' }}>{dataGB > 0 ? Math.round(dataGB).toLocaleString() : '—'}</td>
-                    <td style={{ textAlign: 'right', color: 'var(--text2)' }}>{isPreOpt ? '—' : (N > 0 ? '+' : '') + N}</td>
-                    <td style={{ textAlign: 'right', fontWeight: 600, color: isPreOpt ? 'var(--text2)' : '#f85149' }}>
-                      {dataGB > 0 ? projRatio.toFixed(3) + '×' : '—'}
+                    <td style={{ textAlign: 'right', color: isProjected ? '#f85149' : 'var(--text2)', fontWeight: isProjected ? 600 : 400 }}>
+                      {dataGB > 0 ? ratio.toFixed(2) + '×' : '—'}
+                      {isProjected && <span style={{ fontSize: 10, color: '#8b949e', marginLeft: 4 }}>proj.</span>}
                     </td>
-                    <td style={{ color: isPreOpt ? 'var(--text2)' : '#d29922', fontSize: 11 }}>
-                      {isPreOpt
-                        ? `Actual (${Math.round(mt[m]?.avgBackupGB || 0).toLocaleString()} ÷ ${Math.round(dataGB).toLocaleString()})`
-                        : `${ratioBaseline.toFixed(3)} + ${ratioMonthlyDelta.toFixed(3)}×${N}`}
-                    </td>
-                    <td style={{ textAlign: 'right', color: 'var(--text2)' }}>{dataGB > 0 ? Math.round(projBackupGB).toLocaleString() : '—'}</td>
-                    <td style={{ textAlign: 'right', color: 'var(--text2)', fontFamily: 'monospace', fontSize: 11 }}>${ccbPerBackupGB.toFixed(4)}</td>
-                    <td style={{ textAlign: 'right', fontWeight: 600, color: isPreOpt ? 'var(--text2)' : '#f85149' }}>{dataGB > 0 ? fmt(projCCB) : '—'}</td>
-                    <td style={{ textAlign: 'right', color: '#58a6ff' }}>{fmt(actualCCB)}</td>
-                    <td style={{ textAlign: 'right', fontWeight: 700, color: variance > 500 ? 'var(--green)' : variance < -500 ? 'var(--red)' : 'var(--text2)' }}>
-                      {dataGB > 0 && Math.abs(variance) > 500 ? (variance > 0 ? '+' : '') + fmt(variance) : '—'}
+                    <td style={{ textAlign: 'right', color: 'var(--text2)' }}>{dataGB > 0 ? projBackupGB.toLocaleString() : '—'}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 600, color: m >= OPT_START ? '#f85149' : 'var(--text2)' }}>{projCCB > 0 ? fmt(projCCB) : '—'}</td>
+                    <td style={{ textAlign: 'right', color: '#3fb950', fontWeight: 600 }}>{fmt(actual)}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 700, color: saving !== null && saving > 500 ? 'var(--green)' : saving !== null && saving < -500 ? 'var(--red)' : 'var(--text2)' }}>
+                      {saving !== null && Math.abs(saving) > 500 ? (saving > 0 ? '+' : '') + fmt(saving) : '—'}
                     </td>
                   </tr>
                 );
@@ -504,34 +496,19 @@ export default function OverviewTab({ data }: Props) {
             </tbody>
             <tfoot>
               <tr style={{ borderTop: '2px solid var(--border)' }}>
-                <td style={{ fontWeight: 700, paddingTop: 10 }} colSpan={7}>Total Projected CCB (all months)</td>
-                <td style={{ textAlign: 'right', fontWeight: 800, color: '#f85149', paddingTop: 10 }}>
-                  {fmt(months.reduce((s, m, i) => {
-                    const dGB = mt[m]?.avgDataGB || 0;
-                    const r = i <= baselineIdx ? (dGB > 0 ? (mt[m]?.avgBackupGB||0)/dGB : 0) : ratioBaseline + ratioMonthlyDelta*(i-baselineIdx);
-                    return s + r * dGB * ccbPerBackupGB;
-                  }, 0))}
-                </td>
-                <td style={{ textAlign: 'right', fontWeight: 800, color: '#58a6ff', paddingTop: 10 }}>
-                  {fmt(months.reduce((s, m) => s + (mt[m]?.ccb || 0), 0))}
-                </td>
-                <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--green)', paddingTop: 10, fontSize: 13 }}>
-                  +{fmt(months.reduce((s, m, i) => {
-                    if (m < OPT_START) return s;
-                    const dGB = mt[m]?.avgDataGB || 0;
-                    const r = i <= baselineIdx ? (dGB > 0 ? (mt[m]?.avgBackupGB||0)/dGB : 0) : ratioBaseline + ratioMonthlyDelta*(i-baselineIdx);
-                    return s + Math.max(r * dGB * ccbPerBackupGB - (mt[m]?.total||0), 0);
-                  }, 0))}
-                </td>
+                <td style={{ fontWeight: 700, paddingTop: 10 }} colSpan={4}>Total</td>
+                <td style={{ textAlign: 'right', fontWeight: 800, color: '#f85149', paddingTop: 10 }}>{fmt(hypoFull.reduce((a, b) => a + b, 0))}</td>
+                <td style={{ textAlign: 'right', fontWeight: 800, color: '#3fb950', paddingTop: 10 }}>{fmt(totalActual)}</td>
+                <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--green)', paddingTop: 10 }}>+{fmt(totalSavings)}</td>
               </tr>
             </tfoot>
           </table>
         </div>
         <div style={{ padding: '8px 20px 14px', fontSize: 11, color: 'var(--text2)', lineHeight: 1.7 }}>
-          <strong>Variance</strong> = Projected CCB − Actual CCB (positive = saving vs what CCB-only would have cost under old policy). &nbsp;· 
-          Pre-policy-change rows (shaded, up to Apr 2026) use the actual observed ratio as baseline. From May 2026 the ratio is projected. 
-          Note: main chart and table show actual CCB for pre-policy-change months; audit trail normalises all months to the Apr 2026 rate for methodological transparency. &nbsp;· 
-          * Partial month.
+          Shaded rows = Jan–Apr 2026 baseline period (actual observed ratios used). From May 2026 the ratio is projected.
+          &nbsp;·&nbsp; <strong>Proj. CCB (full rate)</strong> = undiscounted rate (÷ 0.8) — matches the red line in the chart above exactly.
+          &nbsp;·&nbsp; Saving = Proj. CCB − Actual Paid (Jan–Apr: pure discount saving; May+: discount + policy change combined).
+          &nbsp;·&nbsp; * Partial month.
         </div>
       </div>
     </div>
