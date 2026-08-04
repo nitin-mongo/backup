@@ -22,6 +22,7 @@ const USED_DISK_GB: Record<string, number> = {
   '2026-04': 33883.20,
   '2026-05': 36916.80,
   '2026-06': 39073.10,
+  // '2026-07': 0, // TODO: update from Atlas UI → Metrics → Disk Space Used (all clusters, per-node aggregate)
 };
 
 // Savings are tracked from Jan 2026 (when 20% enterprise discount started).
@@ -83,6 +84,8 @@ export default function OverviewTab({ data }: Props) {
     : months.filter(m => m <= PRE_OPT_END).length - 1;
 
   const hypotheticalPerMonth: number[] = months.map((m, i) => {
+    // Partial months: invoice still in progress — no projection, no saving shown
+    if (partialMonths.includes(m)) return mt[m]?.total || 0;
     if (m < OPT_START) {
       // Pre-Jan 2026: show actual CCB (historical, no savings applicable)
       return mt[m]?.ccb || 0;
@@ -113,13 +116,14 @@ export default function OverviewTab({ data }: Props) {
   // Full-rate hypothetical (always computed — used as reference line in chart)
   const hypoFull = hypotheticalPerMonth;
   // Discount-adjusted: apply 20% off to post-OPT_START months when toggle is ON
+  // Skip partial months (no projection for in-progress months)
   const hypoAdj = hypotheticalPerMonth.map((v, i) =>
-    discountOn && months[i] >= OPT_START ? v * (1 - DISC) : v
+    discountOn && months[i] >= OPT_START && !partialMonths.includes(months[i]) ? v * (1 - DISC) : v
   );
 
-  // The discount value itself (full - discounted) per month
+  // The discount value itself (full - discounted) per month (exclude partial months)
   const discValuePerMonth = hypotheticalPerMonth.map((v, i) =>
-    months[i] >= OPT_START ? v * DISC : 0
+    months[i] >= OPT_START && !partialMonths.includes(months[i]) ? v * DISC : 0
   );
   const totalDiscValue  = discValuePerMonth.reduce((a, b) => a + b, 0);
 
