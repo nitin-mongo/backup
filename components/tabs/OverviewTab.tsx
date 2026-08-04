@@ -24,8 +24,9 @@ const USED_DISK_GB: Record<string, number> = {
   '2026-06': 39073.10,
 };
 
-// Month from which CCB + S3 Export optimisation was introduced
-const OPT_START = '2026-01';
+// Month the backup policy actually changed (CCB retention shortened + S3 Export started)
+// 18 May 2026 was the first policy change; Jun 2026 is the first FULL post-policy month.
+const OPT_START = '2026-05';
 const GRID = '#21262d';
 const yK = { callback: (v: unknown) => '$' + (Number(v) / 1000).toFixed(0) + 'K' };
 
@@ -46,15 +47,21 @@ export default function OverviewTab({ data }: Props) {
   // This gives a much higher projected CCB than simple data-scaling because the ratio
   // itself compounds with data growth.
 
-  const PRE_OPT_END = '2025-12'; // Dec 2025 = last month of old policy
+  const PRE_OPT_END = '2026-04'; // Apr 2026 = last full month before 18 May policy change
 
-  // Effective CCB rate per GB of backup storage ($/GB/month) derived from pre-opt average
-  const ccbPerBackupGB = (wi?.preAvgBackupGB || 0) > 0
-    ? (wi.preAvgCCB || 0) / wi.preAvgBackupGB
-    : 0;
+  // Jan–Apr 2026: post-data-deletion, pre-backup-policy-change (the correct projection baseline)
+  // Dec 2025 data archival finished aging through CCB snapshots by ~Jan–Mar 2026.
+  // 20% enterprise discount was active from Jan 2026. First policy change = 18 May 2026.
+  const preOptMonths  = months.filter(m => m >= '2026-01' && m <= PRE_OPT_END);
 
-  // Actual monthly ratio for each pre-opt month
-  const preOptMonths  = months.filter(m => m >= '2025-07' && m <= PRE_OPT_END);
+  // Effective CCB rate derived from Jan–Apr 2026 invoices (already includes 20% enterprise discount)
+  const preOptTotalCCB  = preOptMonths.reduce((s, m) => s + (mt[m]?.ccb || 0), 0);
+  const preOptTotalBkGB = preOptMonths.reduce((s, m) => s + (mt[m]?.avgBackupGB || 0), 0);
+  const ccbPerBackupGB  = preOptTotalBkGB > 0 ? preOptTotalCCB / preOptTotalBkGB : 0;
+  const preOptAvgCCB    = preOptMonths.length > 0 ? preOptTotalCCB  / preOptMonths.length : 0;
+  const preOptAvgBkGB   = preOptMonths.length > 0 ? preOptTotalBkGB / preOptMonths.length : 0;
+
+  // Actual monthly ratio (backup GB ÷ provisioned data GB from invoice) for each pre-opt month
   const preOptRatios  = preOptMonths
     .map(m => (mt[m]?.avgDataGB || 0) > 0 ? (mt[m].avgBackupGB || 0) / mt[m].avgDataGB : 0)
     .filter(r => r > 0);
@@ -74,18 +81,16 @@ export default function OverviewTab({ data }: Props) {
     : months.filter(m => m <= PRE_OPT_END).length - 1;
 
   const hypotheticalPerMonth: number[] = months.map((m, i) => {
+    if (m < OPT_START) {
+      // Pre-policy-change months: return actual CCB paid (historical fact, not a projection)
+      // Covers Jul 2025–Apr 2026 including the Dec 2025 data archival period and 20% discount era
+      return mt[m]?.ccb || 0;
+    }
+    // From May 2026: project what CCB-only would have cost if the May 18 policy change had NOT happened
     const dataGB = mt[m]?.avgDataGB || 0;
     if (!dataGB) return 0;
-
-    let projectedRatio: number;
-    if (i <= baselineIdx) {
-      // Pre-optimisation: use the actual observed ratio for that month
-      projectedRatio = (mt[m].avgBackupGB || 0) / dataGB;
-    } else {
-      // Post-optimisation: ratio would have kept growing at pre-opt trend rate
-      projectedRatio = ratioBaseline + ratioMonthlyDelta * (i - baselineIdx);
-    }
-
+    const N = i - baselineIdx;
+    const projectedRatio = ratioBaseline + ratioMonthlyDelta * N;
     return projectedRatio * dataGB * ccbPerBackupGB;
   });
 
@@ -246,12 +251,14 @@ export default function OverviewTab({ data }: Props) {
         <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 20, lineHeight: 1.7 }}>
           Under the old CCB-only policy, the <strong style={{ color: '#e6edf3' }}>backup-to-data ratio was growing</strong> every month as more snapshots accumulated.
           {discountOn
-            ? <> The <span style={{ color: 'rgba(248,81,73,.6)', fontWeight: 600 }}>dashed red line</span> is full-rate CCB-only (no discount).
-                The <span style={{ color: '#d29922', fontWeight: 600 }}>orange line</span> is CCB-only with the 20% enterprise discount applied from Jan 2026.
-                The <span style={{ color: '#3fb950', fontWeight: 600 }}>green area</span> is actual (CCB + Export). The gap from orange to green = export strategy saving.
+            ? <> The <span style={{ color: 'rgba(248,81,73,.6)', fontWeight: 600 }}>dashed red line</span> is the full-rate projection (no discount).
+                The <span style={{ color: '#d29922', fontWeight: 600 }}>orange line</span> shows it with 20% enterprise discount from Jan 2026.
+                The <span style={{ color: '#3fb950', fontWeight: 600 }}>green area</span> is actual (CCB + Export). Gap from orange → green = export strategy saving.
               </>
-            : <> The <span style={{ color: '#f85149', fontWeight: 600 }}>red line</span> projects what CCB would have cost at old policy rates (ratio growing at {ratioMonthlyDelta > 0 ? '+' : ''}{ratioMonthlyDelta.toFixed(2)}×/month, Jul–Dec 2025 trend).
-                The <span style={{ color: '#3fb950', fontWeight: 600 }}>green shaded area</span> is what was actually charged (CCB + S3 Export).
+            : <> Up to Apr 2026 the line shows <strong style={{ color: '#e6edf3' }}>actual CCB paid</strong> each month (historical).
+                From <strong style={{ color: '#f85149' }}>May 2026</strong>, the <span style={{ color: '#f85149', fontWeight: 600 }}>red line</span> projects what CCB-only would have cost had the
+                18 May policy change not occurred — using the Apr 2026 ratio ({ratioBaseline.toFixed(2)}×) trending at {ratioMonthlyDelta.toFixed(3)}×/month (Jan–Apr 2026 observed).
+                The <span style={{ color: '#3fb950', fontWeight: 600 }}>green shaded area</span> is actual (CCB + S3 Export). The gap from Jun 2026 is the strategy saving.
               </>}
         </p>
         <ChartWrapper type="line" data={convictionChart as never} height={320} options={{
@@ -371,7 +378,7 @@ export default function OverviewTab({ data }: Props) {
         </div>
         <div style={{ padding: '8px 20px 14px', fontSize: 11, color: 'var(--text2)', lineHeight: 1.7 }}>
           * Partial month (invoice in progress). &nbsp;·&nbsp;
-          <strong>Projected CCB-Only:</strong> actual observed ratio (backup/data) for pre-opt months; for Jan 2026 onwards, ratio is projected forward at the pre-opt monthly growth rate ({ratioMonthlyDelta > 0 ? '+' : ''}{ratioMonthlyDelta.toFixed(2)}×/month). Cost = projectedRatio × dataGB × CCBrate/GB. &nbsp;·&nbsp;
+          <strong>Projected CCB-Only:</strong> for months before May 2026, shows actual CCB paid (historical). From May 2026, projects what CCB-only would have cost had the May 18 backup policy change not occurred — ratio trended at {ratioMonthlyDelta.toFixed(3)}×/month (Jan–Apr 2026 baseline). Cost = projectedRatio × dataGB × CCBrate/GB. &nbsp;·&nbsp;
           <strong>Prov. Disk/Node:</strong> invoice avgDataGB ÷ 3 (3-node RS). &nbsp;·&nbsp;
           <strong>Used Disk/Node:</strong> Atlas Metrics → Disk Space Used (all clusters, per-node). &nbsp;·&nbsp;
           <strong>Ratio</strong> = Backup GB ÷ Used Disk/Node.
@@ -385,8 +392,9 @@ export default function OverviewTab({ data }: Props) {
             Projected CCB-Only — Full Calculation Audit Trail
           </h3>
           <p style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.6 }}>
-            Step-by-step numbers behind every "Projected CCB-Only" figure. Pre-optimisation months use actual observed ratios as the baseline.
-            From Jan 2026 the ratio is projected forward at the measured pre-opt growth rate.
+            Step-by-step numbers behind every “Projected CCB-Only” figure from May 2026 onwards.
+            Pre-policy-change months (up to Apr 2026) use actual observed ratios as the baseline.
+            From May 2026 the ratio is projected at the Jan–Apr 2026 trend rate.
           </p>
         </div>
 
@@ -397,25 +405,25 @@ export default function OverviewTab({ data }: Props) {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
             {[
-              {
-                label: 'Pre-Opt Avg CCB / month',
-                val: fmt(wi?.preAvgCCB || 0),
-                sub: 'Jul – Dec 2025 average from invoices',
+            {
+                label: 'Jan–Apr 2026 Avg CCB / month',
+                val: fmt(preOptAvgCCB),
+                sub: 'average from Jan–Apr 2026 invoices (incl. 20% discount)',
               },
               {
-                label: 'Pre-Opt Avg Backup Storage',
-                val: Math.round(wi?.preAvgBackupGB || 0).toLocaleString() + ' GB',
-                sub: 'avg backup GB across Jul–Dec 2025',
+                label: 'Jan–Apr 2026 Avg Backup Storage',
+                val: Math.round(preOptAvgBkGB).toLocaleString() + ' GB',
+                sub: 'avg backup GB Jan–Apr 2026 (post-data-archival baseline)',
               },
               {
                 label: 'Effective CCB Rate / GB',
                 val: ccbPerBackupGB > 0 ? '$' + ccbPerBackupGB.toFixed(4) + '/GB/mo' : 'N/A',
-                sub: 'preAvgCCB ÷ preAvgBackupGB',
+                sub: 'Jan–Apr 2026 avg CCB ÷ Backup GB (incl. 20% discount)',
               },
               {
-                label: 'Ratio at Dec 2025 (baseline)',
+                label: 'Ratio at Apr 2026 (baseline)',
                 val: ratioBaseline.toFixed(3) + '×',
-                sub: `growing at ${ratioMonthlyDelta > 0 ? '+' : ''}${ratioMonthlyDelta.toFixed(3)}×/month (Jul→Dec 2025 trend)`,
+                sub: `trending at ${ratioMonthlyDelta > 0 ? '+' : ''}${ratioMonthlyDelta.toFixed(3)}×/month (Jan–Apr 2026 trend)`,
               },
             ].map((s, i) => (
               <div key={i} style={{ background: 'var(--surface2)', borderRadius: 8, padding: 12 }}>
@@ -426,11 +434,11 @@ export default function OverviewTab({ data }: Props) {
             ))}
           </div>
           <div style={{ marginTop: 12, padding: '10px 14px', background: 'rgba(88,166,255,.08)', borderRadius: 8, fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>
-            <strong style={{ color: 'var(--text)' }}>Formula (Jan 2026 onwards): </strong>
-            Projected Ratio = {ratioBaseline.toFixed(3)} + {ratioMonthlyDelta.toFixed(3)} × N &nbsp;|&nbsp;
-            Projected Backup GB = Projected Ratio × Data GB (all nodes) &nbsp;|&nbsp;
+            <strong style={{ color: 'var(--text)' }}>Formula (May 2026 onwards): </strong>
+            Projected Ratio = {ratioBaseline.toFixed(3)} + {ratioMonthlyDelta.toFixed(3)} × N &nbsp;| 
+            Projected Backup GB = Projected Ratio × Data GB (all nodes) &nbsp;| 
             Projected CCB = Projected Backup GB × ${ccbPerBackupGB.toFixed(4)}/GB &nbsp;
-            <em style={{ color: '#8b949e' }}>(where N = months since Dec 2025)</em>
+            <em style={{ color: '#8b949e' }}>(where N = months since Apr 2026; rate already includes 20% enterprise discount)</em>
           </div>
         </div>
 
@@ -439,7 +447,7 @@ export default function OverviewTab({ data }: Props) {
           <table>
             <thead>
               <tr>
-                {['Month', 'Data GB (all nodes)', 'N (months since Dec\'25)', 'Projected Ratio', 'Ratio Source', 'Projected Backup GB', 'CCB Rate /GB', 'Projected CCB', 'Actual CCB', 'Variance'].map(h => (
+                {['Month', 'Data GB (all nodes)', 'N (months since Apr\'26)', 'Projected Ratio', 'Ratio Source', 'Projected Backup GB', 'CCB Rate /GB', 'Projected CCB', 'Actual CCB', 'Variance'].map(h => (
                   <th key={h} style={{ textAlign: h === 'Month' || h === 'Ratio Source' ? 'left' : 'right', whiteSpace: 'nowrap', fontSize: 11 }}>{h}</th>
                 ))}
               </tr>
@@ -512,8 +520,9 @@ export default function OverviewTab({ data }: Props) {
           </table>
         </div>
         <div style={{ padding: '8px 20px 14px', fontSize: 11, color: 'var(--text2)', lineHeight: 1.7 }}>
-          <strong>Variance</strong> = Projected CCB − Actual CCB (positive = saving vs what would have been charged under old policy). &nbsp;·&nbsp;
-          Pre-optimisation rows (shaded) use the actual observed ratio — this is the measured baseline, not a projection. &nbsp;·&nbsp;
+          <strong>Variance</strong> = Projected CCB − Actual CCB (positive = saving vs what CCB-only would have cost under old policy). &nbsp;· 
+          Pre-policy-change rows (shaded, up to Apr 2026) use the actual observed ratio as baseline. From May 2026 the ratio is projected. 
+          Note: main chart and table show actual CCB for pre-policy-change months; audit trail normalises all months to the Apr 2026 rate for methodological transparency. &nbsp;· 
           * Partial month.
         </div>
       </div>
