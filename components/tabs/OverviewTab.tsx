@@ -24,9 +24,11 @@ const USED_DISK_GB: Record<string, number> = {
   '2026-06': 39073.10,
 };
 
-// Month the backup policy actually changed (CCB retention shortened + S3 Export started)
-// 18 May 2026 was the first policy change; Jun 2026 is the first FULL post-policy month.
-const OPT_START = '2026-05';
+// Savings are tracked from Jan 2026 (when 20% enterprise discount started).
+// Jan–Apr saving = discount value; May+ saving = discount + backup policy change.
+const OPT_START  = '2026-01';
+// The backup policy itself only changed on 18 May 2026:
+const POLICY_START = '2026-05';
 const GRID = '#21262d';
 const yK = { callback: (v: unknown) => '$' + (Number(v) / 1000).toFixed(0) + 'K' };
 
@@ -82,16 +84,22 @@ export default function OverviewTab({ data }: Props) {
 
   const hypotheticalPerMonth: number[] = months.map((m, i) => {
     if (m < OPT_START) {
-      // Pre-policy-change months: return actual CCB paid (historical fact, not a projection)
-      // Covers Jul 2025–Apr 2026 including the Dec 2025 data archival period and 20% discount era
+      // Pre-Jan 2026: show actual CCB (historical, no savings applicable)
       return mt[m]?.ccb || 0;
     }
-    // From May 2026: project what CCB-only would have cost if the May 18 policy change had NOT happened
+    if (m < POLICY_START) {
+      // Jan–Apr 2026: savings come purely from the 20% enterprise discount.
+      // Show what would have been billed WITHOUT the discount (full/undiscounted rate).
+      return (mt[m]?.ccb || 0) / 0.8;
+    }
+    // May 2026+: project what CCB-only would have cost at full rate
+    // (no discount AND no policy change). Divide by 0.8 to undo the discount baked
+    // into ccbPerBackupGB so the baseline is consistent with Jan–Apr.
     const dataGB = mt[m]?.avgDataGB || 0;
     if (!dataGB) return 0;
     const N = i - baselineIdx;
     const projectedRatio = ratioBaseline + ratioMonthlyDelta * N;
-    return projectedRatio * dataGB * ccbPerBackupGB;
+    return (projectedRatio * dataGB * ccbPerBackupGB) / 0.8;
   });
 
   const actualPerMonth    = months.map(m => mt[m]?.total || 0);
@@ -251,14 +259,14 @@ export default function OverviewTab({ data }: Props) {
         <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 20, lineHeight: 1.7 }}>
           Under the old CCB-only policy, the <strong style={{ color: '#e6edf3' }}>backup-to-data ratio was growing</strong> every month as more snapshots accumulated.
           {discountOn
-            ? <> The <span style={{ color: 'rgba(248,81,73,.6)', fontWeight: 600 }}>dashed red line</span> is the full-rate projection (no discount).
-                The <span style={{ color: '#d29922', fontWeight: 600 }}>orange line</span> shows it with 20% enterprise discount from Jan 2026.
-                The <span style={{ color: '#3fb950', fontWeight: 600 }}>green area</span> is actual (CCB + Export). Gap from orange → green = export strategy saving.
+            ? <> The <span style={{ color: 'rgba(248,81,73,.6)', fontWeight: 600 }}>dashed red line</span> is the full-rate baseline (no discount, no policy change).
+                The <span style={{ color: '#d29922', fontWeight: 600 }}>orange line</span> is CCB at discounted rate but unchanged policy (gap red→orange = discount value).
+                The <span style={{ color: '#3fb950', fontWeight: 600 }}>green area</span> is actual (CCB + Export). Gap orange→green = export strategy saving.
               </>
-            : <> Up to Apr 2026 the line shows <strong style={{ color: '#e6edf3' }}>actual CCB paid</strong> each month (historical).
-                From <strong style={{ color: '#f85149' }}>May 2026</strong>, the <span style={{ color: '#f85149', fontWeight: 600 }}>red line</span> projects what CCB-only would have cost had the
-                18 May policy change not occurred — using the Apr 2026 ratio ({ratioBaseline.toFixed(2)}×) trending at {ratioMonthlyDelta.toFixed(3)}×/month (Jan–Apr 2026 observed).
-                The <span style={{ color: '#3fb950', fontWeight: 600 }}>green shaded area</span> is actual (CCB + S3 Export). The gap from Jun 2026 is the strategy saving.
+            : <> The <span style={{ color: '#f85149', fontWeight: 600 }}>red line</span> is the full-rate baseline: what you would have paid for CCB with
+                <em> no discount and no policy change</em>. Jan–Apr savings = 20% discount value only.
+                From <strong style={{ color: '#f85149' }}>May 2026</strong> the projection uses the Apr 2026 ratio ({ratioBaseline.toFixed(2)}×, trending {ratioMonthlyDelta.toFixed(3)}×/month).
+                The <span style={{ color: '#3fb950', fontWeight: 600 }}>green area</span> is actual total (CCB + S3 Export). The widening gap is combined discount + strategy saving.
               </>}
         </p>
         <ChartWrapper type="line" data={convictionChart as never} height={320} options={{
@@ -378,7 +386,7 @@ export default function OverviewTab({ data }: Props) {
         </div>
         <div style={{ padding: '8px 20px 14px', fontSize: 11, color: 'var(--text2)', lineHeight: 1.7 }}>
           * Partial month (invoice in progress). &nbsp;·&nbsp;
-          <strong>Projected CCB-Only:</strong> for months before May 2026, shows actual CCB paid (historical). From May 2026, projects what CCB-only would have cost had the May 18 backup policy change not occurred — ratio trended at {ratioMonthlyDelta.toFixed(3)}×/month (Jan–Apr 2026 baseline). Cost = projectedRatio × dataGB × CCBrate/GB. &nbsp;·&nbsp;
+          <strong>Projected CCB-Only:</strong> for months before Jan 2026, shows actual CCB (historical). Jan–Apr 2026 shows the undiscounted rate (actual CCB ÷ 0.8) — the gap vs actual = 20% discount saving. May 2026+ projects the undiscounted, no-policy-change rate; gap vs actual = discount + strategy combined. &nbsp;·&nbsp;
           <strong>Prov. Disk/Node:</strong> invoice avgDataGB ÷ 3 (3-node RS). &nbsp;·&nbsp;
           <strong>Used Disk/Node:</strong> Atlas Metrics → Disk Space Used (all clusters, per-node). &nbsp;·&nbsp;
           <strong>Ratio</strong> = Backup GB ÷ Used Disk/Node.
