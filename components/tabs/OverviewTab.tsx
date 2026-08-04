@@ -22,7 +22,7 @@ const USED_DISK_GB: Record<string, number> = {
   '2026-04': 33883.20,
   '2026-05': 36916.80,
   '2026-06': 39073.10,
-  // '2026-07': 0, // TODO: update from Atlas UI → Metrics → Disk Space Used (all clusters, per-node aggregate)
+  '2026-07': 41108.00,
 };
 
 // Savings are tracked from Jan 2026 (when 20% enterprise discount started).
