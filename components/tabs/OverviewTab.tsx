@@ -459,8 +459,8 @@ export default function OverviewTab({ data }: Props) {
           <table>
             <thead>
               <tr>
-                {['Month', 'Data GB', 'Backup / Data Ratio', 'Proj. Backup GB', 'Proj. CCB (full rate)', 'Actual Paid', 'Saving'].map(h => (
-                  <th key={h} style={{ textAlign: h === 'Month' ? 'left' : 'right', whiteSpace: 'nowrap', fontSize: 11 }}>{h}</th>
+                {['Month', 'Data GB', 'Backup GB', 'Backup / Data Ratio', 'Proj. Backup GB', 'Proj. CCB (full rate)', 'Actual Paid', 'Saving'].map(h => (
+                  <th key={h} style={{ textAlign: h === 'Month' ? 'left' : 'right', whiteSpace: 'nowrap', fontSize: 11, padding: '8px 6px' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -480,18 +480,20 @@ export default function OverviewTab({ data }: Props) {
                 const actual   = actualPerMonth[i];
                 const saving   = m >= OPT_START ? projCCB - actual : null;
                 const isPartial = partialMonths.includes(m);
+                const tdS = { padding: '6px 6px' };
                 return (
                   <tr key={m} style={{ opacity: isPartial ? 0.65 : 1, background: !isProjected ? 'rgba(255,255,255,.02)' : 'transparent' }}>
-                    <td style={{ fontWeight: 500 }}>{monthLabel(m)}{isPartial ? ' *' : ''}</td>
-                    <td style={{ textAlign: 'right', color: 'var(--text2)' }}>{dataGB > 0 ? Math.round(dataGB).toLocaleString() : '—'}</td>
-                    <td style={{ textAlign: 'right', color: isProjected ? '#f85149' : 'var(--text2)', fontWeight: isProjected ? 600 : 400 }}>
+                    <td style={{ ...tdS, fontWeight: 500 }}>{monthLabel(m)}{isPartial ? ' *' : ''}</td>
+                    <td style={{ ...tdS, textAlign: 'right', color: 'var(--text2)' }}>{dataGB > 0 ? Math.round(dataGB).toLocaleString() : '—'}</td>
+                    <td style={{ ...tdS, textAlign: 'right', color: 'var(--text2)' }}>{bkpGB > 0 ? Math.round(bkpGB).toLocaleString() : '—'}</td>
+                    <td style={{ ...tdS, textAlign: 'right', color: isProjected ? '#f85149' : 'var(--text2)', fontWeight: isProjected ? 600 : 400 }}>
                       {dataGB > 0 ? ratio.toFixed(2) + '×' : '—'}
                       {isProjected && <span style={{ fontSize: 10, color: '#8b949e', marginLeft: 4 }}>proj.</span>}
                     </td>
-                    <td style={{ textAlign: 'right', color: 'var(--text2)' }}>{dataGB > 0 ? projBackupGB.toLocaleString() : '—'}</td>
-                    <td style={{ textAlign: 'right', fontWeight: 600, color: m >= OPT_START ? '#f85149' : 'var(--text2)' }}>{projCCB > 0 ? fmt(projCCB) : '—'}</td>
-                    <td style={{ textAlign: 'right', color: '#3fb950', fontWeight: 600 }}>{fmt(actual)}</td>
-                    <td style={{ textAlign: 'right', fontWeight: 700, color: saving !== null && saving > 500 ? 'var(--green)' : saving !== null && saving < -500 ? 'var(--red)' : 'var(--text2)' }}>
+                    <td style={{ ...tdS, textAlign: 'right', color: 'var(--text2)' }}>{dataGB > 0 ? projBackupGB.toLocaleString() : '—'}</td>
+                    <td style={{ ...tdS, textAlign: 'right', fontWeight: 600, color: m >= OPT_START ? '#f85149' : 'var(--text2)' }}>{projCCB > 0 ? fmt(projCCB) : '—'}</td>
+                    <td style={{ ...tdS, textAlign: 'right', color: '#3fb950', fontWeight: 600 }}>{fmt(actual)}</td>
+                    <td style={{ ...tdS, textAlign: 'right', fontWeight: 700, color: saving !== null && saving > 500 ? 'var(--green)' : saving !== null && saving < -500 ? 'var(--red)' : 'var(--text2)' }}>
                       {saving !== null && Math.abs(saving) > 500 ? (saving > 0 ? '+' : '') + fmt(saving) : '—'}
                     </td>
                   </tr>
@@ -500,7 +502,7 @@ export default function OverviewTab({ data }: Props) {
             </tbody>
             <tfoot>
               <tr style={{ borderTop: '2px solid var(--border)' }}>
-                <td style={{ fontWeight: 700, paddingTop: 10 }} colSpan={4}>Total</td>
+                <td style={{ fontWeight: 700, paddingTop: 10 }} colSpan={5}>Total</td>
                 <td style={{ textAlign: 'right', fontWeight: 800, color: '#f85149', paddingTop: 10 }}>{fmt(hypoFull.reduce((a, b) => a + b, 0))}</td>
                 <td style={{ textAlign: 'right', fontWeight: 800, color: '#3fb950', paddingTop: 10 }}>{fmt(totalActual)}</td>
                 <td style={{ textAlign: 'right', fontWeight: 800, color: 'var(--green)', paddingTop: 10 }}>+{fmt(totalSavings)}</td>
