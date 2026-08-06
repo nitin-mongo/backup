@@ -188,13 +188,11 @@ export default function OverviewTab({ data }: Props) {
     <div>
       {/* ── Hero ── */}
       <div style={{ background: 'linear-gradient(135deg,#0a1f2e,#0d2a3a)', border: '1px solid #1d4f6e', borderRadius: 12, padding: 28, marginBottom: 24 }}>
-        <h2 style={{ fontSize: 17, color: '#58a6ff', fontWeight: 700, marginBottom: 6 }}>
-          Atlas Backup Optimisation — Verified Savings for Darwinbox
-        </h2>
+
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
           <p style={{ color: '#aab4be', fontSize: 13, lineHeight: 1.75, maxWidth: 780, margin: 0 }}>
             By moving from a pure <strong style={{ color: '#f85149' }}>Continuous Cloud Backup (CCB)</strong> retention policy to a hybrid{' '}
-            <strong style={{ color: '#3fb950' }}>CCB + S3 Export</strong> strategy in early 2026, Darwinbox has significantly reduced backup costs
+            <strong style={{ color: '#3fb950' }}>CCB + S3 Export</strong> strategy in early 2026, backup costs have been significantly reduced
             while handling data growth. Every number below comes directly from MongoDB Atlas invoice data.
           </p>
           {/* 20% Discount Toggle */}
