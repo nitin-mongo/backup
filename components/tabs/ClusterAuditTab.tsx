@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { DashboardData } from '@/lib/types';
 import { fmt } from '@/lib/formatters';
@@ -8,36 +9,102 @@ const ChartWrapper = dynamic(() => import('@/components/ChartWrapper'), { ssr: f
 
 interface Props { data: DashboardData; }
 
-// ─── Hardcoded model inputs for dbox1-instance1 ──────────────────────────────
+// ─── Model inputs per month ───────────────────────────────────────────────────
 // User-provided: Mar disk=1.3TB oplog=3GB/hr, Apr disk=1.4TB oplog=4.7GB/hr,
 // Jul disk=1.6TB oplog=5GB/hr. May/Jun interpolated linearly.
-// Projected old policy CCB = theoretical backup GB × 0.76 calibration × $0.2504/GB
-//   (0.76 factor validated: Apr theoretical gives $8,977 vs $8,873 actual = 1.2% diff)
-// For Mar/Apr (old policy was ACTIVE): projected = actual CCB from invoice.
 // ─────────────────────────────────────────────────────────────────────────────
+interface MonthParams {
+  diskGB: number;
+  oplogGBhr: number;
+  isActual: boolean;   // true = old policy was active, use invoice directly
+}
+const MONTH_PARAMS: Record<string, MonthParams> = {
+  '2026-03': { diskGB: 1331, oplogGBhr: 3.0, isActual: true  },
+  '2026-04': { diskGB: 1434, oplogGBhr: 4.7, isActual: true  },
+  '2026-05': { diskGB: 1502, oplogGBhr: 4.8, isActual: false },
+  '2026-06': { diskGB: 1570, oplogGBhr: 4.9, isActual: false },
+  '2026-07': { diskGB: 1638, oplogGBhr: 5.0, isActual: false },
+};
+
+// Old policy constants
+const HOURLY_EVERY_HR    = 6;
+const HOURLY_RETAIN_DAYS = 7;
+const DAILY_RETAIN_DAYS  = 30;
+const WEEKLY_RETAIN_WKS  = 5;
+const MONTHLY_RETAIN_MOS = 12;
+const PITR_DAYS_SAME     = 2;
+const CROSS_DAILY_DAYS   = 30;
+const PITR_DAYS_CROSS    = 2;
+const CALIB_FACTOR       = 0.76;  // calibrated Apr: $8,977 theory vs $8,873 actual = 1.2% error
+const CCB_RATE           = 0.2504; // $/GB (incl. 20% enterprise discount)
+
+interface CalcBreakdown {
+  hourlyCount: number;
+  fullSnapshot: number;
+  hourlyIncr: number;
+  hourlyTotal: number;
+  dailyExtra: number;
+  dailyGB: number;
+  weeklyExtra: number;
+  weeklyGB: number;
+  monthlyExtra: number;
+  monthlyGB: number;
+  pitrSameGB: number;
+  crossDailyGB: number;
+  crossPitrGB: number;
+  theoretical: number;
+  calibrated: number;
+  projCCB: number;
+  dailyRate: number;   // GB/day = oplog × 24
+}
+
+function calcBreakdown(diskGB: number, oplogGBhr: number): CalcBreakdown {
+  const dailyRate   = oplogGBhr * 24;
+  const hourlyCount = Math.floor((HOURLY_RETAIN_DAYS * 24) / HOURLY_EVERY_HR);
+  const fullSnapshot= diskGB;
+  const hourlyIncr  = (hourlyCount - 1) * oplogGBhr * HOURLY_EVERY_HR;
+  const hourlyTotal = fullSnapshot + hourlyIncr;
+
+  const dailyExtra  = Math.max(0, DAILY_RETAIN_DAYS - HOURLY_RETAIN_DAYS);
+  const dailyGB     = dailyExtra * dailyRate;
+
+  const dailyWindow = DAILY_RETAIN_DAYS;
+  const weeklyExtra = Math.max(0, WEEKLY_RETAIN_WKS * 7 - dailyWindow);
+  const weeklyGB    = weeklyExtra * dailyRate;
+
+  const weeklyWindow  = WEEKLY_RETAIN_WKS * 7;
+  const monthlyExtra  = Math.max(0, MONTHLY_RETAIN_MOS * 30 - weeklyWindow);
+  const monthlyGB     = monthlyExtra * dailyRate;
+
+  const pitrSameGB  = PITR_DAYS_SAME * 24 * oplogGBhr;
+  const crossDailyGB= diskGB + (CROSS_DAILY_DAYS - 1) * dailyRate;
+  const crossPitrGB = PITR_DAYS_CROSS * 24 * oplogGBhr;
+
+  const theoretical = hourlyTotal + dailyGB + weeklyGB + monthlyGB + pitrSameGB + crossDailyGB + crossPitrGB;
+  const calibrated  = theoretical * CALIB_FACTOR;
+  const projCCB     = calibrated * CCB_RATE;
+
+  return { hourlyCount, fullSnapshot, hourlyIncr, hourlyTotal, dailyExtra, dailyGB,
+           weeklyExtra, weeklyGB, monthlyExtra, monthlyGB, pitrSameGB, crossDailyGB,
+           crossPitrGB, theoretical, calibrated, projCCB, dailyRate };
+}
 
 const MONTHS = ['2026-03', '2026-04', '2026-05', '2026-06', '2026-07'];
 const MONTH_LABELS = ['Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026'];
 
-// Projected CCB under old policy for each month
-// Mar & Apr: old policy was active — actual CCB IS the old-policy cost
-// May: transition month (policy changed ~18 May); full-month old-policy estimate
-// Jun & Jul: new policy active — model estimate of what old policy would have cost
-const PROJ_OLD_CCB: Record<string, { value: number; note: string }> = {
-  '2026-03': { value: 8922.12, note: 'Actual invoice — old policy active' },
-  '2026-04': { value: 8873.12, note: 'Actual invoice — old policy active' },
-  '2026-05': { value: 9182,    note: 'Model estimate: 1.5 TB disk, 4.8 GB/hr oplog, old policy × 0.76 calibration' },
-  '2026-06': { value: 9382,    note: 'Model estimate: 1.55 TB disk, 4.9 GB/hr oplog, old policy × 0.76 calibration' },
-  '2026-07': { value: 9592,    note: 'Model estimate: 1.6 TB disk, 5.0 GB/hr oplog, old policy × 0.76 calibration — verified ±1% vs Apr actuals' },
-};
+// Pre-compute breakdowns for all months
+const BREAKDOWNS: Record<string, CalcBreakdown> = {};
+for (const m of MONTHS) {
+  const p = MONTH_PARAMS[m];
+  BREAKDOWNS[m] = calcBreakdown(p.diskGB, p.oplogGBhr);
+}
 
-// Projected backup GB under old policy (for table)
+// For Mar/Apr (actual), use actual invoice CCB; for others use model
 const PROJ_OLD_BK_GB: Record<string, number> = {
-  '2026-03': 35081,   // actual
-  '2026-04': 36086,   // actual
-  '2026-05': 36669,   // model
-  '2026-06': 37488,   // model
-  '2026-07': 38309,   // model
+  '2026-03': 35081, '2026-04': 36086,
+  '2026-05': Math.round(BREAKDOWNS['2026-05'].calibrated),
+  '2026-06': Math.round(BREAKDOWNS['2026-06'].calibrated),
+  '2026-07': Math.round(BREAKDOWNS['2026-07'].calibrated),
 };
 
 const CARD: React.CSSProperties = {
@@ -65,27 +132,37 @@ const TD: React.CSSProperties = {
   whiteSpace: 'nowrap' as const,
 };
 
-export default function ClusterAuditTab({ data }: Props) {
-  const cluster = data.clusters.find(c => c.name === 'dbox1-instance1');
+const gb = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' GB';
+const pct = (n: number) => n.toFixed(0) + '%';
 
+export default function ClusterAuditTab({ data }: Props) {
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggleExpand = (m: string) =>
+    setExpanded(prev => { const s = new Set(prev); s.has(m) ? s.delete(m) : s.add(m); return s; });
+
+  const cluster = data.clusters.find(c => c.name === 'dbox1-instance1');
   if (!cluster) {
     return <div style={{ color: '#8b949e', padding: 40, textAlign: 'center' }}>dbox1-instance1 not found in dataset.</div>;
   }
 
-  // Build per-month rows
+  // Build per-month rows — for actual months use invoice CCB as projected
   const rows = MONTHS.map(m => {
-    const d      = cluster.months[m];
-    const projOld = PROJ_OLD_CCB[m];
+    const d           = cluster.months[m];
+    const p           = MONTH_PARAMS[m];
+    const bk          = BREAKDOWNS[m];
     const actualCCB   = d?.ccb        || 0;
     const exportCost  = d?.totalExport || 0;
     const actualTotal = d?.total       || 0;
     const backupGB    = d?.avgBackupGB || 0;
-    const saving      = projOld.value - actualCCB;
-    const pct         = projOld.value > 0 ? (saving / projOld.value) * 100 : 0;
-    const isActual    = m <= '2026-04'; // old policy was active
-    return { m, label: MONTH_LABELS[MONTHS.indexOf(m)], projOldCCB: projOld.value, projNote: projOld.note,
-             actualCCB, exportCost, actualTotal, backupGB, projBkGB: PROJ_OLD_BK_GB[m],
-             saving, pct, isActual };
+    const actualRate  = backupGB > 0 ? actualCCB / backupGB : 0;
+    // For actual months, projected = actual CCB (that IS the old policy cost)
+    const projOldCCB  = p.isActual ? actualCCB : bk.projCCB;
+    const projBkGB    = PROJ_OLD_BK_GB[m];
+    const saving      = projOldCCB - actualCCB;
+    const savingPct   = projOldCCB > 0 ? (saving / projOldCCB) * 100 : 0;
+    return { m, label: MONTH_LABELS[MONTHS.indexOf(m)], p, bk, isActual: p.isActual,
+             projOldCCB, projBkGB, actualCCB, exportCost, actualTotal,
+             backupGB, actualRate, saving, savingPct };
   });
 
   // Summary figures (May–Jul only — the saving months)
@@ -305,9 +382,9 @@ export default function ClusterAuditTab({ data }: Props) {
                         <span style={{ color: '#6e7681', fontSize: 11 }}>baseline</span>
                       ) : (
                         <>
-                          <span style={{ color: r.pct > 50 ? '#3fb950' : '#e3b341', fontWeight: 600 }}>{r.pct.toFixed(0)}%</span>
+                          <span style={{ color: r.savingPct > 50 ? '#3fb950' : '#e3b341', fontWeight: 600 }}>{r.savingPct.toFixed(0)}%</span>
                           <div style={{ marginTop: 3, height: 3, width: '100%', background: '#21262d', borderRadius: 2 }}>
-                            <div style={{ width: Math.min(100, r.pct) + '%', height: '100%', background: '#3fb950', borderRadius: 2 }} />
+                            <div style={{ width: Math.min(100, r.savingPct) + '%', height: '100%', background: '#3fb950', borderRadius: 2 }} />
                           </div>
                         </>
                       )}
@@ -361,6 +438,218 @@ export default function ClusterAuditTab({ data }: Props) {
             &nbsp; Net saving Jun: {fmt(rows[3].saving - rows[3].exportCost)} · Jul: {fmt(rows[4].saving - rows[4].exportCost)}.
           </div>
         </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          CALCULATION AUDIT — full step-by-step breakdown per month
+      ══════════════════════════════════════════════════════════════════════ */}
+      <div style={{ ...CARD, marginTop: 24 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#e6edf3', marginBottom: 6 }}>
+          Calculation Audit — Step-by-Step Backup GB Derivation
+        </div>
+        <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 16 }}>
+          Click any month to expand/collapse. Tier sizes are additive (incremental block-level snapshots). Monthly tier is the dominant cost driver.
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
+          {rows.map(r => {
+            const isOpen = expanded.has(r.m);
+            const bk = r.bk;
+            const p  = r.p;
+
+            return (
+              <div key={r.m} style={{
+                border: `1px solid ${isOpen ? '#58a6ff' : '#30363d'}`,
+                borderRadius: 8,
+                overflow: 'hidden',
+                background: '#0d1117',
+              }}>
+                {/* header — always visible */}
+                <button
+                  onClick={() => toggleExpand(r.m)}
+                  style={{
+                    width: '100%', padding: '10px 12px', background: 'none', border: 'none',
+                    cursor: 'pointer', textAlign: 'left', borderBottom: isOpen ? '1px solid #21262d' : 'none',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#e6edf3' }}>{r.label}</span>
+                    <span style={{ fontSize: 12, color: '#8b949e' }}>{isOpen ? '▲' : '▼'}</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: p.isActual ? '#3fb950' : '#bc8cff', marginTop: 3 }}>
+                    {p.isActual ? '✓ Actual invoice' : `Model: ${(p.diskGB/1024).toFixed(2)} TB / ${p.oplogGBhr} GB/hr`}
+                  </div>
+                  <div style={{ marginTop: 6, display: 'flex', gap: 8 }}>
+                    <span style={{ fontSize: 12, color: '#f85149', fontWeight: 600 }}>{fmt(r.projOldCCB)}</span>
+                    <span style={{ fontSize: 11, color: '#6e7681', marginTop: 1 }}>old policy</span>
+                  </div>
+                </button>
+
+                {/* expanded detail */}
+                {isOpen && (
+                  <div style={{ padding: '10px 12px', fontSize: 11 }}>
+                    {p.isActual ? (
+                      // ── Actual months (Mar / Apr) ──────────────────────
+                      <>
+                        <div style={{ color: '#3fb950', fontWeight: 600, marginBottom: 8 }}>
+                          Source: Actual Atlas Invoice
+                        </div>
+                        <div style={{ color: '#8b949e', marginBottom: 10, lineHeight: 1.7 }}>
+                          Old policy was active this month.
+                          Projected old CCB = actual invoice CCB — no estimation.
+                        </div>
+                        <Row label="Disk used" val={`${(p.diskGB/1024).toFixed(2)} TB (${p.diskGB.toLocaleString()} GB)`} />
+                        <Row label="Oplog rate" val={`${p.oplogGBhr} GB/hr`} />
+                        <Row label="Actual backup GB" val={r.backupGB.toLocaleString() + ' GB'} />
+                        <Row label="Actual CCB rate" val={`$${r.actualRate.toFixed(4)}/GB`} />
+                        <div style={{ borderTop: '1px solid #21262d', marginTop: 8, paddingTop: 8 }}>
+                          <Row label="Invoice CCB" val={fmt(r.projOldCCB)} highlight />
+                        </div>
+
+                        {/* Model comparison (for calibration validation) */}
+                        <div style={{ marginTop: 12, padding: '8px 10px', background: '#161b22', borderRadius: 6, border: '1px solid #30363d' }}>
+                          <div style={{ color: '#8b949e', fontWeight: 600, marginBottom: 6 }}>
+                            Model cross-check (calibration)
+                          </div>
+                          <Row label="Full snapshot" val={gb(bk.fullSnapshot)} />
+                          <Row label={`Hourly (${bk.hourlyCount} snaps × ${HOURLY_EVERY_HR}h)`} val={gb(bk.hourlyTotal)} />
+                          <Row label={`Daily extra (${bk.dailyExtra}d × ${bk.dailyRate.toFixed(0)} GB/d)`} val={gb(bk.dailyGB)} />
+                          <Row label={`Weekly extra (${bk.weeklyExtra}d × ${bk.dailyRate.toFixed(0)} GB/d)`} val={gb(bk.weeklyGB)} />
+                          <Row label={`Monthly extra (${bk.monthlyExtra}d × ${bk.dailyRate.toFixed(0)} GB/d)`} val={gb(bk.monthlyGB)} highlight />
+                          <Row label={`PITR same (${PITR_DAYS_SAME}d × ${p.oplogGBhr} GB/hr)`} val={gb(bk.pitrSameGB)} />
+                          <Row label={`Cross-region daily (${CROSS_DAILY_DAYS}d)`} val={gb(bk.crossDailyGB)} />
+                          <Row label={`Cross-region PITR (${PITR_DAYS_CROSS}d)`} val={gb(bk.crossPitrGB)} />
+                          <div style={{ borderTop: '1px solid #30363d', marginTop: 6, paddingTop: 6 }}>
+                            <Row label="Theoretical total" val={gb(bk.theoretical)} />
+                            <Row label={`× ${CALIB_FACTOR} calibration`} val={gb(bk.calibrated)} />
+                            <Row label={`× $${CCB_RATE}/GB`} val={fmt(bk.projCCB)} />
+                            <div style={{ marginTop: 4, fontSize: 10, color: '#3fb950' }}>
+                              Model accuracy: {((bk.projCCB / r.actualCCB - 1) * 100).toFixed(1)}% vs invoice
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      // ── Model months (May / Jun / Jul) ─────────────────
+                      <>
+                        <div style={{ color: '#bc8cff', fontWeight: 600, marginBottom: 8 }}>
+                          Model Calculation (new policy active)
+                        </div>
+
+                        {/* Policy summary */}
+                        <div style={{ marginBottom: 10, padding: '6px 8px', background: '#161b22', borderRadius: 4, border: '1px solid #30363d', fontSize: 10, color: '#8b949e', lineHeight: 1.6 }}>
+                          <strong style={{ color: '#c9d1d9' }}>Old Policy applied:</strong><br/>
+                          Hourly every {HOURLY_EVERY_HR}h, retain {HOURLY_RETAIN_DAYS}d &nbsp;·&nbsp;
+                          Daily retain {DAILY_RETAIN_DAYS}d &nbsp;·&nbsp;
+                          Weekly retain {WEEKLY_RETAIN_WKS}w &nbsp;·&nbsp;
+                          Monthly retain {MONTHLY_RETAIN_MOS}mo<br/>
+                          PITR same {PITR_DAYS_SAME}d &nbsp;·&nbsp; Cross-region daily {CROSS_DAILY_DAYS}d + PITR {PITR_DAYS_CROSS}d
+                        </div>
+
+                        <Row label="Disk used (per node)" val={`${(p.diskGB/1024).toFixed(2)} TB (${p.diskGB.toLocaleString()} GB)`} />
+                        <Row label="Oplog rate" val={`${p.oplogGBhr} GB/hr → ${bk.dailyRate.toFixed(0)} GB/day`} />
+
+                        <div style={{ borderTop: '1px solid #21262d', margin: '8px 0' }} />
+
+                        {/* Tier-by-tier breakdown */}
+                        <div style={{ fontWeight: 600, color: '#c9d1d9', marginBottom: 6 }}>Snapshot Tier Breakdown</div>
+
+                        <TierRow
+                          label={`Hourly snapshots (${bk.hourlyCount} × every ${HOURLY_EVERY_HR}h, ${HOURLY_RETAIN_DAYS} days)`}
+                          detail={`Full: ${bk.fullSnapshot.toLocaleString()} + ${bk.hourlyCount-1} incr × ${(p.oplogGBhr*HOURLY_EVERY_HR).toFixed(0)} GB`}
+                          val={gb(bk.hourlyTotal)}
+                          pctOfTotal={bk.theoretical > 0 ? bk.hourlyTotal/bk.theoretical*100 : 0}
+                          color="#58a6ff"
+                        />
+                        <TierRow
+                          label={`Daily snapshots (days ${HOURLY_RETAIN_DAYS+1}–${DAILY_RETAIN_DAYS}, ${bk.dailyExtra} extra days)`}
+                          detail={`${bk.dailyExtra}d × ${bk.dailyRate.toFixed(0)} GB/day`}
+                          val={gb(bk.dailyGB)}
+                          pctOfTotal={bk.theoretical > 0 ? bk.dailyGB/bk.theoretical*100 : 0}
+                          color="#3fb950"
+                        />
+                        <TierRow
+                          label={`Weekly snapshots (${bk.weeklyExtra} extra days beyond daily)`}
+                          detail={`${bk.weeklyExtra}d × ${bk.dailyRate.toFixed(0)} GB/day`}
+                          val={gb(bk.weeklyGB)}
+                          pctOfTotal={bk.theoretical > 0 ? bk.weeklyGB/bk.theoretical*100 : 0}
+                          color="#e3b341"
+                        />
+                        <TierRow
+                          label={`Monthly snapshots (${bk.monthlyExtra} extra days ← DOMINANT)`}
+                          detail={`${bk.monthlyExtra}d × ${bk.dailyRate.toFixed(0)} GB/day = ${pct(bk.monthlyGB/bk.theoretical*100)} of total`}
+                          val={gb(bk.monthlyGB)}
+                          pctOfTotal={bk.theoretical > 0 ? bk.monthlyGB/bk.theoretical*100 : 0}
+                          color="#f85149"
+                          dominant
+                        />
+                        <TierRow
+                          label={`PITR oplog same-region (${PITR_DAYS_SAME}d × ${p.oplogGBhr} GB/hr)`}
+                          detail={`${PITR_DAYS_SAME} × 24 × ${p.oplogGBhr}`}
+                          val={gb(bk.pitrSameGB)}
+                          pctOfTotal={bk.theoretical > 0 ? bk.pitrSameGB/bk.theoretical*100 : 0}
+                          color="#8b949e"
+                        />
+                        <TierRow
+                          label={`Cross-region daily (${CROSS_DAILY_DAYS} snapshots, AP_SOUTH_2)`}
+                          detail={`Full: ${bk.fullSnapshot.toLocaleString()} + ${CROSS_DAILY_DAYS-1} incr × ${bk.dailyRate.toFixed(0)} GB`}
+                          val={gb(bk.crossDailyGB)}
+                          pctOfTotal={bk.theoretical > 0 ? bk.crossDailyGB/bk.theoretical*100 : 0}
+                          color="#bc8cff"
+                        />
+                        <TierRow
+                          label={`Cross-region PITR (${PITR_DAYS_CROSS}d × ${p.oplogGBhr} GB/hr)`}
+                          detail={`${PITR_DAYS_CROSS} × 24 × ${p.oplogGBhr}`}
+                          val={gb(bk.crossPitrGB)}
+                          pctOfTotal={bk.theoretical > 0 ? bk.crossPitrGB/bk.theoretical*100 : 0}
+                          color="#8b949e"
+                        />
+
+                        <div style={{ borderTop: '1px solid #21262d', marginTop: 8, paddingTop: 8 }}>
+                          <Row label="Theoretical total" val={gb(bk.theoretical)} />
+                          <Row label={`× ${CALIB_FACTOR} calibration factor`} val={gb(bk.calibrated)} />
+                          <div style={{ fontSize: 10, color: '#6e7681', margin: '3px 0 6px 0', lineHeight: 1.5 }}>
+                            Calibration validated on Apr 2026: model {fmt(BREAKDOWNS['2026-04'].projCCB)} vs invoice {fmt(rows.find(x=>x.m==='2026-04')?.actualCCB||0)} ({((BREAKDOWNS['2026-04'].projCCB/(rows.find(x=>x.m==='2026-04')?.actualCCB||1)-1)*100).toFixed(1)}% error)
+                          </div>
+                          <Row label={`× $${CCB_RATE}/GB (incl. 20% ent. discount)`} val="" highlight />
+                          <div style={{ textAlign: 'right', fontSize: 16, fontWeight: 700, color: '#f85149', marginTop: 4 }}>
+                            = {fmt(bk.projCCB)}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── small helper components ───────────────────────────────────────────────────
+function Row({ label, val, highlight }: { label: string; val: string; highlight?: boolean }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, gap: 8 }}>
+      <span style={{ color: '#6e7681', fontSize: 11, flexShrink: 0 }}>{label}</span>
+      <span style={{ color: highlight ? '#e6edf3' : '#c9d1d9', fontSize: 11, fontWeight: highlight ? 600 : 400, textAlign: 'right' }}>{val}</span>
+    </div>
+  );
+}
+
+function TierRow({ label, detail, val, pctOfTotal, color, dominant }:
+  { label: string; detail: string; val: string; pctOfTotal: number; color: string; dominant?: boolean }) {
+  return (
+    <div style={{ marginBottom: 7, padding: '5px 7px', borderRadius: 4, background: dominant ? 'rgba(248,81,73,.08)' : 'transparent', border: dominant ? '1px solid rgba(248,81,73,.2)' : '1px solid transparent' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
+        <span style={{ fontSize: 11, color: dominant ? '#f85149' : '#c9d1d9', lineHeight: 1.4, flex: 1 }}>{label}</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color, whiteSpace: 'nowrap' }}>{val}</span>
+      </div>
+      <div style={{ fontSize: 10, color: '#6e7681', marginTop: 2 }}>{detail}</div>
+      <div style={{ marginTop: 4, height: 2, background: '#21262d', borderRadius: 1 }}>
+        <div style={{ width: pctOfTotal + '%', height: '100%', background: color, borderRadius: 1, opacity: 0.7 }} />
       </div>
     </div>
   );
