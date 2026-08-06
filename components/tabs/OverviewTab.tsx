@@ -353,12 +353,16 @@ export default function OverviewTab({ data }: Props) {
                 const bkpGB   = mt[m]?.avgBackupGB || 0;
                 const ratio   = usedGB > 0 ? (bkpGB / usedGB).toFixed(2) : '-';
                 const provPerNode = Math.round((mt[m]?.avgDataGB || 0) / 3);
-                const isOpt   = m >= OPT_START;
-                const showSav = isOpt && Math.abs(saving) > 500;
+                const isOpt        = m >= OPT_START;
+                const isTransition = m === POLICY_START;  // May 2026 — both old retention + new export ran
+                const showSav  = isOpt && Math.abs(saving) > 500;
                 const isPartial = partialMonths.includes(m);
+                const savColor  = !showSav ? 'var(--text2)'
+                  : isTransition && saving < 0 ? '#d29922'   // amber for expected transition cost
+                  : saving >= 0 ? 'var(--green)' : 'var(--red)';
                 return (
                   <tr key={m} style={{ opacity: isPartial ? 0.65 : 1 }}>
-                    <td style={{ fontWeight: 500 }}>{monthLabel(m)}{isPartial ? ' *' : ''}</td>
+                    <td style={{ fontWeight: 500 }}>{monthLabel(m)}{isPartial ? ' *' : ''}{isTransition ? ' †' : ''}</td>
                     <td style={{ textAlign: 'right', color: isOpt ? (discountOn ? '#d29922' : '#f85149') : 'var(--text2)' }}>
                       {fmt(hypo)}{hypoRef && isOpt ? <span style={{ fontSize: 10, color: 'rgba(248,81,73,.6)', marginLeft: 4 }}>({fmt(hypoRef)})</span> : null}
                     </td>
@@ -366,9 +370,8 @@ export default function OverviewTab({ data }: Props) {
                     <td style={{ textAlign: 'right', color: '#bc8cff' }}>{(mt[m]?.cloudBackup || 0) > 0 ? fmt(mt[m].cloudBackup) : '—'}</td>
                     <td style={{ textAlign: 'right', color: '#d29922' }}>{(mt[m]?.totalExport || 0) > 0 ? fmt(mt[m].totalExport) : '—'}</td>
                     <td style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(act)}</td>
-                    <td style={{ textAlign: 'right', fontWeight: 700, color: showSav ? (saving >= 0 ? 'var(--green)' : 'var(--red)') : 'var(--text2)' }}>
-                      {showSav ? (saving >= 0 ? '+' : '') + fmt(saving) : '—'}
-                    </td>
+                    <td style={{ textAlign: 'right', fontWeight: 700, color: savColor }}>
+                      {showSav ? (saving >= 0 ? '+' : '') + fmt(saving) : '—'}</td>
                     <td style={{ textAlign: 'right', color: 'var(--text2)' }}>{Math.round(bkpGB).toLocaleString()}</td>
                     <td style={{ textAlign: 'right', color: 'var(--text2)' }}>{provPerNode.toLocaleString()}</td>
                     <td style={{ textAlign: 'right', color: 'var(--text2)' }}>{usedGB > 0 ? Math.round(usedGB).toLocaleString() : '—'}</td>
@@ -391,6 +394,7 @@ export default function OverviewTab({ data }: Props) {
         </div>
         <div style={{ padding: '8px 20px 14px', fontSize: 11, color: 'var(--text2)', lineHeight: 1.7 }}>
           * Partial month (invoice in progress). &nbsp;·&nbsp;
+          † Transition month (policy changed ~May 18). Negative saving is expected: old-policy retention ran for ~18 days while the full-fleet bulk export (∼$64k) also executed—both costs overlapped. This one-time setup cost is recovered within the first steady-state month. &nbsp;·&nbsp;
           <strong>Projected CCB-Only:</strong> for months before Jan 2026, shows actual CCB (historical). Jan–Apr 2026 shows the undiscounted rate (actual CCB ÷ 0.8) — the gap vs actual = 20% discount saving. May 2026+ projects the undiscounted, no-policy-change rate; gap vs actual = discount + strategy combined. &nbsp;·&nbsp;
           <strong>Prov. Disk/Node:</strong> invoice avgDataGB ÷ 3 (3-node RS). &nbsp;·&nbsp;
           <strong>Used Disk/Node:</strong> Atlas Metrics → Disk Space Used (all clusters, per-node). &nbsp;·&nbsp;
