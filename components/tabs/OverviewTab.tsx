@@ -101,6 +101,9 @@ export default function OverviewTab({ data }: Props) {
   const actualCCBPerMonth    = months.map(m => mt[m]?.ccb || 0);
   const cloudBackupPerMonth  = months.map(m => mt[m]?.cloudBackup || 0);
   const exportPerMonth       = months.map(m => mt[m]?.totalExport || 0);
+  // CCB + Export only — cloudBackup is a separate product for non-CCB clusters,
+  // not affected by the retention policy change. Savings are measured against this.
+  const optimizedPerMonth    = months.map(m => (mt[m]?.ccb || 0) + (mt[m]?.totalExport || 0));
 
   // ── 20% Enterprise Discount toggle (from Jan 2026) ──
   const [discountOn, setDiscountOn] = useState(false);
@@ -122,17 +125,20 @@ export default function OverviewTab({ data }: Props) {
 
   const totalActual = actualPerMonth.reduce((a, b) => a + b, 0);
 
-  // Stats use the active (possibly discounted) projection
+  // Stats use the active (possibly discounted) projection.
+  // Savings compare projected CCB-only vs actual CCB + S3 Export (cloudBackup excluded—
+  // it belongs to non-CCB clusters unaffected by the retention policy change).
   const totalSavings = months.reduce((sum, m, i) =>
-    m >= OPT_START ? sum + Math.max(hypoAdj[i] - actualPerMonth[i], 0) : sum, 0);
+    m >= OPT_START ? sum + Math.max(hypoAdj[i] - optimizedPerMonth[i], 0) : sum, 0);
   const totalHypo = hypoAdj.reduce((a, b) => a + b, 0);
 
   // Latest completed (non-partial) month
   const latestFull = [...months].reverse().find(m => !partialMonths.includes(m) && (mt[m]?.total || 0) > 0) || months[months.length - 2];
   const latestIdx  = months.indexOf(latestFull);
-  const latestHypo   = hypoAdj[latestIdx] || 0;
-  const latestActual = actualPerMonth[latestIdx] || 0;
-  const latestSaving = Math.max(latestHypo - latestActual, 0);
+  const latestHypo      = hypoAdj[latestIdx] || 0;
+  const latestActual    = actualPerMonth[latestIdx] || 0;      // full invoice total (display only)
+  const latestOptimized = optimizedPerMonth[latestIdx] || 0;  // CCB+Export (savings baseline)
+  const latestSaving = Math.max(latestHypo - latestOptimized, 0);
   const savingsPct   = latestHypo > 0 ? Math.round((latestSaving / latestHypo) * 100) : 0;
   const latestDiscValue = discValuePerMonth[latestIdx] || 0;
 
@@ -168,8 +174,8 @@ export default function OverviewTab({ data }: Props) {
         tension: 0.3, pointRadius: 3, fill: false,
       },
       {
-        label: 'Actual: CCB + S3 Export (what was charged)',
-        data: actualPerMonth,
+        label: 'Actual: CCB + S3 Export (optimized policy)',
+        data: optimizedPerMonth,
         borderColor: '#3fb950',
         backgroundColor: 'rgba(63,185,80,0.12)',
         tension: 0.3, pointRadius: 3, fill: true,
@@ -324,7 +330,7 @@ export default function OverviewTab({ data }: Props) {
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
           <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)' }}>Month-by-Month Breakdown — All Clusters</h3>
           <p style={{ fontSize: 12, color: 'var(--text2)', marginTop: 4 }}>
-            All figures from Atlas invoices. "CCB-Only Estimate" = projected cost had the old retention policy continued.
+            All figures from Atlas invoices. "CCB-Only Estimate" = projected cost had the old retention policy continued. "Monthly Saving" = Projected CCB-Only minus (Actual CCB + S3 Export); Cloud Backup is excluded as it belongs to non-CCB clusters unaffected by this policy change.
           </p>
         </div>
         <div className="scr">
@@ -338,10 +344,11 @@ export default function OverviewTab({ data }: Props) {
             </thead>
             <tbody>
               {months.map((m, i) => {
-                const hypo    = Math.round(hypoAdj[i]);
-                const hypoRef = discountOn ? Math.round(hypoFull[i]) : null;
-                const act     = actualPerMonth[i];
-                const saving  = hypo - act;
+                const hypo     = Math.round(hypoAdj[i]);
+                const hypoRef  = discountOn ? Math.round(hypoFull[i]) : null;
+                const act      = actualPerMonth[i];
+                const optimized = optimizedPerMonth[i];
+                const saving   = hypo - optimized;
                 const usedGB  = USED_DISK_GB[m] || 0;
                 const bkpGB   = mt[m]?.avgBackupGB || 0;
                 const ratio   = usedGB > 0 ? (bkpGB / usedGB).toFixed(2) : '-';
