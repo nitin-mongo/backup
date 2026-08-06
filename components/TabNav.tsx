@@ -1,6 +1,6 @@
 'use client';
 
-type TabId = 'overview' | 'clusters' | 'policy';
+type TabId = 'overview' | 'clusters' | 'audit';
 
 interface TabNavProps {
   active: TabId;
@@ -10,7 +10,7 @@ interface TabNavProps {
 const TABS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Executive Summary' },
   { id: 'clusters', label: 'Cluster Detail' },
-  { id: 'policy', label: 'Policy Impact' },
+  { id: 'audit', label: 'Old Policy Audit' },
 ];
 
 export default function TabNav({ active, onChange }: TabNavProps) {
