@@ -97,9 +97,10 @@ export default function OverviewTab({ data }: Props) {
     return (projBackupGB * ccbPerBackupGB) / 0.8;
   });
 
-  const actualPerMonth    = months.map(m => mt[m]?.total || 0);
-  const actualCCBPerMonth = months.map(m => mt[m]?.ccb || 0);
-  const exportPerMonth    = months.map(m => mt[m]?.totalExport || 0);
+  const actualPerMonth       = months.map(m => mt[m]?.total || 0);
+  const actualCCBPerMonth    = months.map(m => mt[m]?.ccb || 0);
+  const cloudBackupPerMonth  = months.map(m => mt[m]?.cloudBackup || 0);
+  const exportPerMonth       = months.map(m => mt[m]?.totalExport || 0);
 
   // ── 20% Enterprise Discount toggle (from Jan 2026) ──
   const [discountOn, setDiscountOn] = useState(false);
@@ -180,6 +181,7 @@ export default function OverviewTab({ data }: Props) {
     labels: ml,
     datasets: [
       { label: 'CCB', data: actualCCBPerMonth, backgroundColor: '#58a6ff99', borderColor: '#58a6ff', borderWidth: 1, stack: 's' },
+      { label: 'Cloud Backup (non-CCB)', data: cloudBackupPerMonth, backgroundColor: '#bc8cff88', borderColor: '#bc8cff', borderWidth: 1, stack: 's' },
       { label: 'S3 Export (Atlas charges)', data: exportPerMonth, backgroundColor: '#d2992299', borderColor: '#d29922', borderWidth: 1, stack: 's' },
     ],
   };
@@ -329,7 +331,7 @@ export default function OverviewTab({ data }: Props) {
           <table>
             <thead>
               <tr>
-                {['Month', 'Projected CCB-Only', 'Actual CCB', 'S3 Export', 'Total Actual', 'Monthly Saving', 'Backup GB', 'Prov. Disk/Node', 'Used Disk/Node', 'Ratio'].map(h => (
+                {['Month', 'Projected CCB-Only', 'Actual CCB', 'Cloud Backup', 'S3 Export', 'Total Actual', 'Monthly Saving', 'Backup GB', 'Prov. Disk/Node', 'Used Disk/Node', 'Ratio'].map(h => (
                   <th key={h} style={{ textAlign: h === 'Month' ? 'left' : 'right', whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -354,6 +356,7 @@ export default function OverviewTab({ data }: Props) {
                       {fmt(hypo)}{hypoRef && isOpt ? <span style={{ fontSize: 10, color: 'rgba(248,81,73,.6)', marginLeft: 4 }}>({fmt(hypoRef)})</span> : null}
                     </td>
                     <td style={{ textAlign: 'right', color: '#58a6ff' }}>{fmt(mt[m]?.ccb || 0)}</td>
+                    <td style={{ textAlign: 'right', color: '#bc8cff' }}>{(mt[m]?.cloudBackup || 0) > 0 ? fmt(mt[m].cloudBackup) : '—'}</td>
                     <td style={{ textAlign: 'right', color: '#d29922' }}>{(mt[m]?.totalExport || 0) > 0 ? fmt(mt[m].totalExport) : '—'}</td>
                     <td style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(act)}</td>
                     <td style={{ textAlign: 'right', fontWeight: 700, color: showSav ? (saving >= 0 ? 'var(--green)' : 'var(--red)') : 'var(--text2)' }}>
@@ -371,7 +374,7 @@ export default function OverviewTab({ data }: Props) {
               <tr style={{ borderTop: '2px solid var(--border)' }}>
                 <td style={{ fontWeight: 700, paddingTop: 10 }}>All Months</td>
                 <td style={{ textAlign: 'right', fontWeight: 700, color: '#f85149', paddingTop: 10 }}>{fmt(totalHypo)}</td>
-                <td colSpan={2}></td>
+                <td colSpan={3}></td>
                 <td style={{ textAlign: 'right', fontWeight: 700, color: '#3fb950', paddingTop: 10 }}>{fmt(totalActual)}</td>
                 <td style={{ textAlign: 'right', fontWeight: 800, fontSize: 14, color: 'var(--green)', paddingTop: 10 }}>+{fmt(totalSavings)}</td>
                 <td colSpan={4}></td>
