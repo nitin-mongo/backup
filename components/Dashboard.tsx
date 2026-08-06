@@ -5,10 +5,11 @@ import { DashboardData } from '@/lib/types';
 import TabNav from '@/components/TabNav';
 import dynamic from 'next/dynamic';
 
-const OverviewTab = dynamic(() => import('@/components/tabs/OverviewTab'), { ssr: false });
-const ClustersTab = dynamic(() => import('@/components/tabs/ClustersTab'), { ssr: false });
+const OverviewTab      = dynamic(() => import('@/components/tabs/OverviewTab'), { ssr: false });
+const ClustersTab      = dynamic(() => import('@/components/tabs/ClustersTab'), { ssr: false });
+const PolicyImpactTab  = dynamic(() => import('@/components/tabs/PolicyImpactTab'), { ssr: false });
 
-type TabId = 'overview' | 'clusters';
+type TabId = 'overview' | 'clusters' | 'policy';
 
 interface Props {
   data: DashboardData;
@@ -36,8 +37,9 @@ export default function Dashboard({ data, dbSource }: Props) {
 
       <TabNav active={activeTab} onChange={(tab) => setActiveTab(tab as TabId)} />
 
-      {activeTab === 'overview' && <OverviewTab data={data} />}
-      {activeTab === 'clusters' && <ClustersTab data={data} />}
+      {activeTab === 'overview'  && <OverviewTab     data={data} />}
+      {activeTab === 'clusters'  && <ClustersTab     data={data} />}
+      {activeTab === 'policy'    && <PolicyImpactTab data={data} />}
     </div>
   );
 }
