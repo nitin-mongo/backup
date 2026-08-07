@@ -153,12 +153,24 @@ export default function ClustersTab({ data }: Props) {
         const hasWhatIf = !!cl.whatIf;
         const clMonths  = months.filter(m => (cl.months[m]?.total || 0) > 0);
 
-        // Hypothetical CCB per month: what would CCB have cost if exports were never introduced?
-        // Uses preAvgCCB (old policy baseline) scaled by each month's data size growth.
+        // Policy changed ~May 18 2026. Pre-policy months = Jan–Apr 2026 (old CCB policy active).
+        const POLICY_CHANGE = '2026-05';
+        const prePolicyClMonths = clMonths.filter(m => m < POLICY_CHANGE);
+        const prePolicyCCBSum   = prePolicyClMonths.reduce((s, m) => s + (cl.months[m]?.ccb || 0), 0);
+        // Average pre-policy CCB — used as counterfactual for post-policy months when whatIf is absent
+        const prePolicyCCBAvg   = prePolicyClMonths.length > 0 ? prePolicyCCBSum / prePolicyClMonths.length : 0;
+
+        // Hypothetical CCB per month: what would CCB have cost had the old policy continued?
+        // Priority 1: use whatIf.preAvgCCB/preAvgData ratio if stored in DB.
+        // Priority 2 (fallback): pre-policy months → actual CCB (old policy was active, so actual IS the baseline);
+        //   post-policy months → pre-policy average CCB (flat counterfactual, conservative estimate).
         const hypotheticalByMonth = clMonths.map(m => {
-          if (!hasWhatIf || !cl.whatIf!.preAvgData) return cl.months[m]?.ccb || 0;
-          const mData = cl.months[m]?.avgDataGB || 0;
-          return Math.round((cl.whatIf!.preAvgCCB * mData) / cl.whatIf!.preAvgData);
+          if (hasWhatIf && cl.whatIf!.preAvgData) {
+            const mData = cl.months[m]?.avgDataGB || 0;
+            return Math.round((cl.whatIf!.preAvgCCB * mData) / cl.whatIf!.preAvgData);
+          }
+          if (m < POLICY_CHANGE) return cl.months[m]?.ccb || 0;   // old policy active — actual = hypothetical
+          return Math.round(prePolicyCCBAvg);                       // post-policy: use pre-avg as counterfactual
         });
 
         const actualCCBByMonth    = clMonths.map(m => cl.months[m]?.ccb          || 0);
@@ -182,11 +194,15 @@ export default function ClustersTab({ data }: Props) {
         const latestActual    = actualTotalByMonth[latestFullIdx]  || 0;
         const latestSavings   = latestHypo - latestActual;
 
+        const hypoLabel = hasWhatIf
+          ? 'Hypothetical: CCB Only (old policy, ratio-scaled)'
+          : 'Hypothetical: CCB Only (old policy avg — conservative estimate)';
+
         const histChartData = {
           labels: clMonths.map(monthLabel),
           datasets: [
             {
-              label: 'Hypothetical: CCB Only (no S3 exports)',
+              label: hypoLabel,
               data: hypotheticalByMonth,
               borderColor: '#f85149',
               backgroundColor: 'rgba(248,81,73,.08)',
