@@ -25,7 +25,7 @@ export default function Dashboard({ data, dbSource }: Props) {
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4, color: '#e6edf3', letterSpacing: '-0.3px' }}>MongoDB Atlas Backup Cost Analysis</h1>
           <div style={{ color: '#8b949e', fontSize: 13 }}>
-            Jan 2025 – Sep 2026 (partial) &nbsp;·&nbsp; {data.clusters.length} clusters &nbsp;·&nbsp; Source: MongoDB Atlas Invoices
+            Jan 2025 – Aug 2026 &nbsp;·&nbsp; {data.clusters.length} clusters &nbsp;·&nbsp; Source: MongoDB Atlas Invoices
           </div>
         </div>
         {dbSource && dbSource !== 'static' && (
