@@ -1,6 +1,8 @@
 ## Local dashboard
 
-Run the app against the bundled JSON without connecting to MongoDB:
+The app uses bundled JSON by default, so Git deployments show the data committed with the app without depending on an existing MongoDB document. To opt in to MongoDB, configure `MONGODB_URI` and set `DASHBOARD_DATA_SOURCE=mongodb`.
+
+To explicitly run in static mode locally:
 
 ```bash
 DASHBOARD_DATA_SOURCE=static npm run dev
