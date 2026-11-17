@@ -140,6 +140,7 @@ const clusterMap = new Map(data.clusters.map(cluster => [cluster.name, {
   ...cluster,
   months: { ...cluster.months },
 }]));
+const originalMonthOrder = new Map([...clusterMap.values()].map(cluster => [cluster.name, Object.keys(cluster.months)]));
 const replacedMonths = new Set();
 const partialMonths = new Set(data.partialMonths || []);
 const partialMonthDays = { ...(data.partialMonthDays || {}) };
@@ -266,6 +267,15 @@ for (const month of replacedMonths) {
 }
 
 const clusters = [...clusterMap.values()]
+  .map(cluster => {
+    const previousOrder = originalMonthOrder.get(cluster.name) || [];
+    const monthKeys = Object.keys(cluster.months);
+    const orderedMonthKeys = [
+      ...previousOrder.filter(month => monthKeys.includes(month)),
+      ...monthKeys.filter(month => !previousOrder.includes(month)),
+    ];
+    return { ...cluster, months: Object.fromEntries(orderedMonthKeys.map(month => [month, cluster.months[month]])) };
+  })
   .filter(cluster => existingClusterNames.has(cluster.name) || months.some(month => (cluster.months[month]?.total || 0) > 50))
   .sort((a, b) => (b.months[months.at(-1)]?.total || 0) - (a.months[months.at(-1)]?.total || 0));
 
