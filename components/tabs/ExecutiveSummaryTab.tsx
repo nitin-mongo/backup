@@ -384,8 +384,34 @@ export default function ExecutiveSummaryTab({ data }: Props) {
           </table>
         </div>
         <div style={{ padding: '10px 20px 16px', color: 'var(--text2)', fontSize: 11, lineHeight: 1.6 }}>
-          Defragmentation savings are identified only through April; the 2026 column carries that amount without annualizing it. The $638 S3 implementation cost is deducted in both actual and projected net benefits. CCB discount projection uses the {novemberPeriodLabel} daily rate for the rest of November and December. December benefits are yet to be realized. 2026 spend projections exclude customer S3 charges not supplied for September onward.
+          Defragmentation savings are identified only through April; the 2026 column carries that amount without annualizing it. The {fmtCurrencyExact(s3ImplementationCost)} S3 implementation cost is deducted in both actual and projected net benefits. CCB discount projection uses the {novemberPeriodLabel} daily rate for the rest of November and December. December benefits are yet to be realized. 2026 spend projections exclude customer S3 charges not supplied for September onward.
         </div>
+      </section>
+      <section style={{ padding: '24px 20px 28px', borderTop: '1px solid var(--border)' }}>
+        <h2 style={{ margin: 0, color: 'var(--text)', fontSize: 18, fontWeight: 700 }}>Storage, Retention &amp; Cost Decisions</h2>
+        <ol style={{ margin: '12px 0 0', padding: 0, listStyle: 'none' }}>
+          {[
+            { title: 'Glacier vs. standard S3 storage' },
+            { title: 'Hourly vs. weekly copy cadence to S3' },
+            { title: '7-day vs. 10-day Atlas CCB backup retention' },
+            { title: 'Plan for data and backup-storage growth under each retention policy' },
+          ].map((item, index) => (
+            <li key={item.title} style={{ display: 'grid', gridTemplateColumns: '38px minmax(0, 1fr)', gap: 12, alignItems: 'start', padding: '13px 0', borderBottom: '1px solid var(--border)' }}>
+              <span style={{ color: 'var(--text2)', fontSize: 13, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{String(index + 1).padStart(2, '0')}</span>
+              <div style={{ color: 'var(--text)', fontSize: 16, lineHeight: 1.45 }}>{item.title}</div>
+            </li>
+          ))}
+          <li style={{ display: 'grid', gridTemplateColumns: '38px minmax(0, 1fr)', gap: 12, alignItems: 'start', padding: '13px 0' }}>
+            <span style={{ color: 'var(--text2)', fontSize: 13, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>05</span>
+            <div>
+              <div style={{ color: 'var(--text)', fontSize: 16, lineHeight: 1.45 }}>Cost optimization options</div>
+              <ol type="a" style={{ margin: '8px 0 0', paddingLeft: 22, color: 'var(--text2)', fontSize: 14, lineHeight: 1.6 }}>
+                <li>Retention policy changes.</li>
+                <li>Data purging during initial sync and defragmentation. This carries risk from unoptimized queries and indexes, may require scaling up, and needs a customer decision.</li>
+              </ol>
+            </div>
+          </li>
+        </ol>
       </section>
     </div>
   );
