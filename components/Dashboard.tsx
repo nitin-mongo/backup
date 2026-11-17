@@ -6,11 +6,12 @@ import { MONTH_NAMES } from '@/lib/formatters';
 import TabNav from '@/components/TabNav';
 import dynamic from 'next/dynamic';
 
+const ExecutiveSummaryTab = dynamic(() => import('@/components/tabs/ExecutiveSummaryTab'), { ssr: false });
 const OverviewTab      = dynamic(() => import('@/components/tabs/OverviewTab'), { ssr: false });
 const ClustersTab      = dynamic(() => import('@/components/tabs/ClustersTab'), { ssr: false });
 const ClusterAuditTab  = dynamic(() => import('@/components/tabs/ClusterAuditTab'), { ssr: false });
 
-type TabId = 'overview' | 'clusters' | 'audit';
+type TabId = 'executive' | 'overview' | 'clusters' | 'audit';
 
 interface Props {
   data: DashboardData;
@@ -18,7 +19,12 @@ interface Props {
 }
 
 export default function Dashboard({ data, dbSource }: Props) {
-  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [activeTab, setActiveTab] = useState<TabId>('executive');
+  const [showSecondaryTabs, setShowSecondaryTabs] = useState(false);
+  const toggleSecondaryTabs = () => {
+    if (showSecondaryTabs && activeTab !== 'executive') setActiveTab('executive');
+    setShowSecondaryTabs(!showSecondaryTabs);
+  };
   const formatMonth = (month: string) => {
     const [year, monthNumber] = month.split('-');
     return `${MONTH_NAMES[Number(monthNumber)]} ${year}`;
@@ -43,11 +49,23 @@ export default function Dashboard({ data, dbSource }: Props) {
         )}
       </div>
 
-      <TabNav active={activeTab} onChange={(tab) => setActiveTab(tab as TabId)} />
+      <TabNav active={activeTab} onChange={(tab) => setActiveTab(tab as TabId)} showSecondaryTabs={showSecondaryTabs} />
 
+      {activeTab === 'executive' && <ExecutiveSummaryTab data={data} />}
       {activeTab === 'overview'  && <OverviewTab      data={data} />}
       {activeTab === 'clusters'  && <ClustersTab      data={data} />}
       {activeTab === 'audit'     && <ClusterAuditTab  data={data} />}
+
+      <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8 }}>
+        <button
+          type="button"
+          aria-expanded={showSecondaryTabs}
+          onClick={toggleSecondaryTabs}
+          style={{ background: 'transparent', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text2)', cursor: 'pointer', fontSize: 11, padding: '6px 10px' }}
+        >
+          {showSecondaryTabs ? 'Hide other tabs' : 'Show other tabs'}
+        </button>
+      </div>
     </div>
   );
 }

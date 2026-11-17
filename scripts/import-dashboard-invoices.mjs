@@ -142,6 +142,7 @@ const clusterMap = new Map(data.clusters.map(cluster => [cluster.name, {
 }]));
 const replacedMonths = new Set();
 const partialMonths = new Set(data.partialMonths || []);
+const partialMonthDays = { ...(data.partialMonthDays || {}) };
 
 for (const invoice of invoices) {
   invoiceMonths.add(invoice.month);
@@ -209,6 +210,7 @@ for (const invoice of invoices) {
   }
 
   const coveredDays = usageDays.size || daysInMonth(invoice.month);
+  partialMonthDays[invoice.month] = coveredDays;
   const isPartial = coveredDays < Math.floor(daysInMonth(invoice.month) * 0.85);
   if (isPartial) partialMonths.add(invoice.month);
   else partialMonths.delete(invoice.month);
@@ -273,6 +275,7 @@ const updatedData = {
   clusters,
   monthly_totals: monthlyTotals,
   partialMonths: [...partialMonths].sort(),
+  partialMonthDays,
 };
 
 const discountMonths = Object.values(discountData.discountByMonth);

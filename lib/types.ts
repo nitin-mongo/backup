@@ -117,6 +117,7 @@ export interface DashboardData {
   clusters: Cluster[];
   monthly_totals: Record<string, MonthData>;
   partialMonths: string[];
+  partialMonthDays?: Record<string, number>;
   whatIfTotal: WhatIfTotal;
   projection: Projection;
   scenarios: Record<string, Scenario>;

@@ -251,15 +251,39 @@
       "ccbDiscountPct": 20,
       "hasGrossData": true,
       "contractActive": true
+    },
+    "2025-06": {
+      "grossTotal": 0,
+      "netTotal": 0,
+      "discount": 0,
+      "discountPct": 0,
+      "ccbGross": 134600.77,
+      "ccbNet": 134600.77,
+      "ccbDiscount": 0,
+      "ccbDiscountPct": 0,
+      "hasGrossData": true,
+      "contractActive": false
+    },
+    "2026-11": {
+      "grossTotal": 15184.29,
+      "netTotal": 91.26,
+      "discount": 15093.03,
+      "discountPct": 99.4,
+      "ccbGross": 75465.14,
+      "ccbNet": 60372.11,
+      "ccbDiscount": 15093.03,
+      "ccbDiscountPct": 20,
+      "hasGrossData": true,
+      "contractActive": true
     }
   },
   "summary": {
-    "totalGross": 2518498.22,
-    "totalNet": 2283176.74,
-    "totalDiscount": 235321.48,
+    "totalGross": 2533682.51,
+    "totalNet": 2283268,
+    "totalDiscount": 250414.51,
     "contractStart": "2026-01",
     "discountOnCCB": 20,
-    "postContractGross": 1016669.06,
-    "postContractDiscount": 234750.17
+    "postContractGross": 1031853.35,
+    "postContractDiscount": 249843.2
   }
 }

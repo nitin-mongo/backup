@@ -1,26 +1,30 @@
 'use client';
 
-type TabId = 'overview' | 'clusters' | 'audit';
+type TabId = 'executive' | 'overview' | 'clusters' | 'audit';
 
 interface TabNavProps {
   active: TabId;
   onChange: (tab: TabId) => void;
+  showSecondaryTabs: boolean;
 }
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: 'overview', label: 'Executive Summary' },
+  { id: 'executive', label: 'Executive Summary' },
+  { id: 'overview', label: 'Detail Summary' },
   { id: 'clusters', label: 'Cluster Detail' },
   { id: 'audit', label: 'Old Policy Audit' },
 ];
 
-export default function TabNav({ active, onChange }: TabNavProps) {
+export default function TabNav({ active, onChange, showSecondaryTabs }: TabNavProps) {
+  const visibleTabs = showSecondaryTabs ? TABS : TABS.filter(tab => tab.id === 'executive');
+
   return (
     <div style={{
       display: 'flex', gap: 0,
       borderBottom: '1px solid var(--border)',
       marginBottom: 24,
     }}>
-      {TABS.map(tab => (
+      {visibleTabs.map(tab => (
         <button
           key={tab.id}
           onClick={() => onChange(tab.id)}
