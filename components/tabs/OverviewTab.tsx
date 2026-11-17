@@ -4,6 +4,7 @@ import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { DashboardData } from '@/lib/types';
 import { fmt, monthLabel } from '@/lib/formatters';
+import discountRaw from '@/data/discountData.json';
 
 const ChartWrapper = dynamic(() => import('@/components/ChartWrapper'), { ssr: false });
 
@@ -32,6 +33,16 @@ const OPT_START  = '2026-01';
 const POLICY_START = '2026-05';
 const GRID = '#21262d';
 const yK = { callback: (v: unknown) => '$' + (Number(v) / 1000).toFixed(0) + 'K' };
+const fmtCurrencyExact = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+const fmtCurrencyWhole = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
+const fmtCurrencySigned = (n: number) => `${n > 0 ? '+' : ''}${fmtCurrencyExact(n)}`;
+const fmtCurrencySignedWhole = (n: number) => n < 0 ? `-${fmtCurrencyWhole(Math.abs(n))}` : `${n > 0 ? '+' : ''}${fmtCurrencyWhole(n)}`;
+const customerS3ChartTotals = {
+  '2026-05': 187063,
+  '2026-06': 124696,
+  '2026-07': 132158,
+  '2026-08': 135185,
+};
 
 export default function OverviewTab({ data }: Props) {
   const { months, monthly_totals: mt, partialMonths } = data;
@@ -125,6 +136,82 @@ export default function OverviewTab({ data }: Props) {
 
   const totalActual = actualPerMonth.reduce((a, b) => a + b, 0);
 
+  const baselineMonths = ['2026-02', '2026-03', '2026-04'];
+  const baselineFebStorage = mt['2026-02']?.avgBackupGB || 0;
+  const baselineAprStorage = mt['2026-04']?.avgBackupGB || 0;
+  const baselineStorageGrowth = (baselineAprStorage - baselineFebStorage) / 2;
+  const baselineCostTotal = baselineMonths.reduce((sum, month) =>
+    sum + (mt[month]?.total || 0) - (mt[month]?.totalExport || 0), 0);
+  const baselineStorageTotal = baselineMonths.reduce((sum, month) => sum + (mt[month]?.avgBackupGB || 0), 0);
+  const baselineCostPerGB = baselineStorageTotal > 0 ? baselineCostTotal / baselineStorageTotal : 0;
+  const historicalCostRows = ['2026-01', ...baselineMonths].map(month => {
+    const actualCost = mt[month]?.total || 0;
+    const exportCost = mt[month]?.totalExport || 0;
+    return {
+      month,
+      periodStatus: month === '2026-01' ? 'historical' : 'baseline',
+      projectedStorage: mt[month]?.avgBackupGB || 0,
+      actualStorage: mt[month]?.avgBackupGB || 0,
+      projectedCost: actualCost - exportCost,
+      atlasActualCost: actualCost,
+      actualCost,
+      customerS3Cost: null,
+      exportCost,
+      variance: null,
+      atlasOnlySavings: null,
+    };
+  });
+  const implementationCostRows = ['2026-05', '2026-06', '2026-07', '2026-08', '2026-09'].map((month, index) => {
+    const projectedStorage = baselineAprStorage + baselineStorageGrowth * (index + 1);
+    const projectedCost = projectedStorage * baselineCostPerGB;
+    const atlasActualCost = mt[month]?.total || 0;
+    const chartTotal = customerS3ChartTotals[month as keyof typeof customerS3ChartTotals];
+    const customerS3Cost = chartTotal === undefined ? null : chartTotal - atlasActualCost;
+    const actualCost = chartTotal ?? atlasActualCost;
+    const variance = customerS3Cost === null
+      ? month === '2026-09' ? atlasActualCost - projectedCost : null
+      : actualCost - projectedCost;
+    return {
+      month,
+      periodStatus: month === '2026-09' ? 'rollback' : 'observed',
+      projectedStorage,
+      actualStorage: mt[month]?.avgBackupGB || 0,
+      projectedCost,
+      atlasActualCost,
+      actualCost,
+      customerS3Cost,
+      exportCost: mt[month]?.totalExport || 0,
+      variance,
+      atlasOnlySavings: null,
+    };
+  });
+  const octoberProjectedStorage = baselineAprStorage + baselineStorageGrowth * 6;
+  const octoberAtlasActual = mt['2026-10']?.total ?? null;
+  const octoberActualRow = {
+    month: '2026-10',
+    periodStatus: 'atlasOnly',
+    projectedStorage: null,
+    actualStorage: mt['2026-10']?.avgBackupGB ?? null,
+    projectedCost: null,
+    atlasActualCost: octoberAtlasActual,
+    actualCost: octoberAtlasActual,
+    customerS3Cost: null,
+    exportCost: mt['2026-10']?.totalExport ?? null,
+    variance: null,
+    atlasOnlySavings: null,
+  };
+  const reviewRows = [...historicalCostRows, ...implementationCostRows, octoberActualRow];
+  const sumImplementationRows = (rows: typeof implementationCostRows) => rows.reduce((totals, row) => ({
+    projectedCost: totals.projectedCost + row.projectedCost,
+    actualCost: totals.actualCost + row.actualCost,
+    atlasInvoiceCost: totals.atlasInvoiceCost + (row.atlasActualCost || 0),
+    customerS3Cost: totals.customerS3Cost + (row.customerS3Cost || 0),
+    exportCost: totals.exportCost + row.exportCost,
+    variance: totals.variance + (row.variance || 0),
+  }), { projectedCost: 0, actualCost: 0, atlasInvoiceCost: 0, customerS3Cost: 0, exportCost: 0, variance: 0 });
+  const implementationTotals = sumImplementationRows(implementationCostRows.filter(row => row.month <= '2026-08'));
+  const maySepTotals = sumImplementationRows(implementationCostRows);
+
   // Stats use the active (possibly discounted) projection.
   // Savings compare projected CCB-only vs actual CCB + S3 Export (cloudBackup excluded—
   // it belongs to non-CCB clusters unaffected by the retention policy change).
@@ -134,6 +221,34 @@ export default function OverviewTab({ data }: Props) {
 
   // Latest completed (non-partial) month
   const latestFull = [...months].reverse().find(m => !partialMonths.includes(m) && (mt[m]?.total || 0) > 0) || months[months.length - 2];
+  const ccbDiscountByMonth = discountRaw.discountByMonth as Record<string, {
+    ccbDiscount: number;
+    ccbDiscountPct: number;
+    ccbGross: number;
+    ccbNet: number;
+  }>;
+  const decemberCCBNet = ccbDiscountByMonth['2025-12']?.ccbNet || 0;
+  const decemberBackupGB = mt['2025-12']?.avgBackupGB || 0;
+  const actualCCBDiscountRows = Object.entries(ccbDiscountByMonth)
+    .filter(([month]) => month >= OPT_START && month <= latestFull)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([month, monthData], index, rows) => {
+      const noPolicyChange = month <= PRE_OPT_END;
+      const defragStorageSavings = decemberCCBNet - monthData.ccbGross;
+      return {
+        month,
+        ccbDiscount: monthData.ccbDiscount,
+        ccbDiscountPct: monthData.ccbDiscountPct,
+        backupStorageReduction: noPolicyChange ? decemberBackupGB - (mt[month]?.avgBackupGB || 0) : null,
+        defragStorageSavings: noPolicyChange ? defragStorageSavings : null,
+        cumulative: rows.slice(0, index + 1).reduce((sum, [, row]) => sum + row.ccbDiscount, 0),
+        cumulativeTotalReduction: rows.slice(0, index + 1).reduce((sum, [rowMonth, row]) =>
+          sum + row.ccbDiscount + (rowMonth <= PRE_OPT_END ? decemberCCBNet - row.ccbGross : 0), 0),
+      };
+    });
+  const actualCCBDiscountSavings = actualCCBDiscountRows.at(-1)?.cumulative || 0;
+  const totalDefragStorageSavings = actualCCBDiscountRows.reduce((sum, row) => sum + (row.defragStorageSavings || 0), 0);
+  const cumulativeTotalReduction = actualCCBDiscountRows.at(-1)?.cumulativeTotalReduction || 0;
   const latestIdx  = months.indexOf(latestFull);
   const latestHypo      = hypoAdj[latestIdx] || 0;
   const latestActual    = actualPerMonth[latestIdx] || 0;      // full invoice total (display only)
@@ -241,6 +356,49 @@ export default function OverviewTab({ data }: Props) {
           ))}
         </div>
 
+        <div style={{ marginTop: 14, padding: '12px 16px', background: 'rgba(63,185,80,.08)', border: '1px solid rgba(63,185,80,.22)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#3fb950' }}>Actual 20% CCB discount savings</div>
+            <div style={{ fontSize: 11, color: '#aab4be', marginTop: 3 }}>Invoice line items · Jan 2026 – {monthLabel(latestFull)} · excludes retention-policy savings</div>
+          </div>
+          <strong style={{ fontSize: 20, color: '#3fb950' }}>{fmt(actualCCBDiscountSavings)}</strong>
+        </div>
+
+        <div style={{ marginTop: 14, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>
+            CCB Cost Reduction vs December 2025
+          </div>
+          <div className="scr">
+            <table>
+              <thead>
+                <tr><th>Month</th><th>Backup Storage vs Dec</th><th>Defrag / Storage Cost Reduction</th><th>CCB Discount</th><th>Cumulative CCB Discount</th><th>Total Reduction</th></tr>
+              </thead>
+              <tbody>
+                {actualCCBDiscountRows.map(row => (
+                  <tr key={row.month}>
+                    <td>{monthLabel(row.month)}</td>
+                    <td>{row.backupStorageReduction === null ? (row.month === '2026-09' ? 'Rollback Sep 5 — mixed month' : 'Policy changed — not calculated') : `${Math.abs(row.backupStorageReduction).toLocaleString()} GB ${row.backupStorageReduction >= 0 ? 'lower' : 'higher'}`}</td>
+                    <td>{row.defragStorageSavings === null ? (row.month === '2026-09' ? 'Rollback Sep 5 — mixed month' : 'Policy changed — not calculated') : fmtCurrencyExact(row.defragStorageSavings)}</td>
+                    <td>{fmtCurrencyExact(row.ccbDiscount)}</td>
+                    <td>{fmtCurrencyExact(row.cumulative)}</td>
+                    <td>{fmtCurrencyExact(row.cumulativeTotalReduction)}</td>
+                  </tr>
+                ))}
+                <tr>
+                  <td colSpan={2}><strong>Totals through {monthLabel(latestFull)}</strong></td>
+                  <td><strong>{fmtCurrencyExact(totalDefragStorageSavings)}</strong></td>
+                  <td><strong>{fmtCurrencyExact(actualCCBDiscountSavings)}</strong></td>
+                  <td><strong>{fmtCurrencyExact(actualCCBDiscountSavings)}</strong></td>
+                  <td><strong>{fmtCurrencyExact(cumulativeTotalReduction)}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style={{ padding: '9px 16px', borderTop: '1px solid var(--border)', color: 'var(--text2)', fontSize: 11, lineHeight: 1.5 }}>
+            December 2025 is the baseline. Total Reduction is cumulative: calculated defrag/storage cost reduction for Jan–Apr plus actual CCB discounts. The footer sums the defrag/storage column (Jan–Apr) and discounts through the latest month. Storage cost reduction is an estimate and may include rate or usage mix; May 2026 onward adds discounts only because the backup policy changed.
+          </div>
+        </div>
+
         {/* Discount breakdown banner when ON */}
         {discountOn && (
           <div style={{ marginTop: 14, padding: '10px 16px', background: 'rgba(188,140,255,.08)', borderRadius: 8, border: '1px solid rgba(188,140,255,.2)', fontSize: 12, color: '#aab4be', lineHeight: 1.7 }}>
@@ -251,6 +409,94 @@ export default function OverviewTab({ data }: Props) {
             &nbsp; This month: strategy <strong style={{ color: '#3fb950' }}>{fmt(latestSaving)}</strong> + discount <strong style={{ color: '#bc8cff' }}>{fmt(latestDiscValue)}</strong> = <strong style={{ color: '#e6edf3' }}>{fmt(latestSaving + latestDiscValue)}</strong>.
           </div>
         )}
+      </div>
+
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden', marginBottom: 24 }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 5 }}>S3 Implementation Cost Review</h3>
+          <p style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.6 }}>
+            Feb–Apr baseline cost excludes Atlas export charges. May–Sep follows the Feb–Apr storage trend.
+          </p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 1, background: 'var(--border)' }}>
+          {[
+            ...baselineMonths.map(month => ({
+              label: `${monthLabel(month)} baseline (excl. export)`,
+              value: fmtCurrencyExact((mt[month]?.total || 0) - (mt[month]?.totalExport || 0)),
+            })),
+            { label: 'Backup storage growth', value: `+${Math.round(baselineStorageGrowth).toLocaleString()} GB / month` },
+            { label: 'Weighted baseline rate', value: `$${baselineCostPerGB.toFixed(4)} / GB-month` },
+          ].map(item => (
+            <div key={item.label} style={{ background: 'var(--surface)', padding: '12px 16px' }}>
+              <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 4 }}>{item.label}</div>
+              <strong style={{ fontSize: 14, color: 'var(--text)' }}>{item.value}</strong>
+            </div>
+          ))}
+        </div>
+        <div className="scr" style={{ overflowX: 'auto' }}>
+          <table style={{ minWidth: 1120, tableLayout: 'fixed' }}>
+            <colgroup>
+              <col style={{ width: '7%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '13%' }} />
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '16%' }} />
+              <col style={{ width: '10%' }} />
+            </colgroup>
+            <thead>
+              <tr>
+                {['Month', 'Projected Backup Storage', 'Actual / MTD Backup Storage', 'Projected Baseline / Full-Month Cost', 'Atlas Invoice Cost', 'Atlas S3 Export', 'Customer S3 Cost', 'Total Actual Backup Cost', 'Actual vs Baseline'].map((label, index) => (
+                  <th key={label} style={{ textAlign: index === 0 ? 'left' : 'right', whiteSpace: 'normal', lineHeight: 1.35, verticalAlign: 'bottom', padding: '10px 8px' }}>{label}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {reviewRows.map(row => (
+                <tr key={row.month}>
+                  <td>{monthLabel(row.month)}</td>
+                  <td>{row.projectedStorage === null ? '—' : `${Math.round(row.projectedStorage).toLocaleString()} GB`}</td>
+                  <td>{row.actualStorage === null ? '—' : `${Math.round(row.actualStorage).toLocaleString()} GB`}</td>
+                  <td>{row.projectedCost === null ? '—' : fmtCurrencyExact(row.projectedCost)}</td>
+                  <td>{row.atlasActualCost === null ? 'Pending invoice' : `${fmtCurrencyWhole(row.atlasActualCost)}${row.customerS3Cost === null && ['rollback', 'atlasOnly'].includes(row.periodStatus) ? '*' : ''}`}</td>
+                  <td>{row.exportCost === null ? '—' : fmtCurrencyExact(row.exportCost)}</td>
+                  <td>{row.customerS3Cost !== null ? fmtCurrencyExact(row.customerS3Cost) : ['rollback', 'atlasOnly'].includes(row.periodStatus) ? 'Unavailable*' : '—'}</td>
+                  <td>{row.actualCost === null ? 'Pending invoice' : `${fmtCurrencyWhole(row.actualCost)}${row.customerS3Cost === null && ['rollback', 'atlasOnly'].includes(row.periodStatus) ? '*' : ''}`}</td>
+                  <td style={{ color: row.variance !== null && row.variance > 0 ? 'var(--red)' : 'var(--green)' }}>{row.variance !== null ? (row.periodStatus === 'rollback' ? fmtCurrencySigned(row.variance) + '*' : fmtCurrencySignedWhole(row.variance)) : row.atlasOnlySavings !== null ? `${fmtCurrencyExact(row.atlasOnlySavings)} saved*` : row.periodStatus === 'baseline' ? 'Baseline' : row.periodStatus === 'historical' ? 'Historical' : row.periodStatus === 'forecast' ? 'Forecast only' : row.periodStatus === 'atlasOnly' ? '—' : 'Not comparable*'}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr style={{ borderTop: '2px solid var(--border)' }}>
+                <td style={{ textAlign: 'left', whiteSpace: 'nowrap' }}><strong>May–Aug total</strong></td>
+                <td style={{ textAlign: 'right' }}>—</td>
+                <td style={{ textAlign: 'right' }}>—</td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}><strong>{fmtCurrencyExact(implementationTotals.projectedCost)}</strong></td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}><strong>{fmtCurrencyWhole(implementationTotals.atlasInvoiceCost)}</strong></td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}><strong>{fmtCurrencyExact(implementationTotals.exportCost)}</strong></td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}><strong>{fmtCurrencyExact(implementationTotals.customerS3Cost)}</strong></td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}><strong>{fmtCurrencyWhole(implementationTotals.actualCost)}</strong></td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}><strong>{fmtCurrencySignedWhole(implementationTotals.variance)}</strong></td>
+              </tr>
+              <tr style={{ borderTop: '1px solid var(--border)' }}>
+                <td style={{ textAlign: 'left', whiteSpace: 'nowrap' }}><strong>May–Sep net total*</strong></td>
+                <td style={{ textAlign: 'right' }}>—</td>
+                <td style={{ textAlign: 'right' }}>—</td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}><strong>{fmtCurrencyExact(maySepTotals.projectedCost)}</strong></td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}><strong>{fmtCurrencyWhole(maySepTotals.atlasInvoiceCost)}</strong></td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}><strong>{fmtCurrencyExact(maySepTotals.exportCost)}</strong></td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}><strong>{fmtCurrencyExact(maySepTotals.customerS3Cost)}*</strong></td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}><strong>{fmtCurrencyWhole(maySepTotals.actualCost)}</strong></td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}><strong>{fmtCurrencySigned(maySepTotals.variance)}</strong></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div style={{ padding: '10px 20px 14px', fontSize: 11, color: 'var(--text2)', lineHeight: 1.6 }}>
+          Jan–Apr historical/baseline rows and October actuals are shown for context and excluded from both totals. May–Aug total excludes September. May–Sep net includes September's $55,837.62 Atlas-only saving, but September customer S3 cost is unavailable, so the net is incomplete and marked *. Customer S3 estimates for May–Aug come from the attached chart's rounded totals; August uses its 14-day ×2.2 scaling. The Sep 5 rollback makes September a mixed-policy month. Forecast storage grows by 17,763 GB/month from April. Projected cost uses the weighted Feb–Apr cost per GB after subtracting Atlas export charges. Positive variance is a candidate overage, not proof of implementation causality.
+        </div>
       </div>
 
       {/* ── Conviction Chart ── */}

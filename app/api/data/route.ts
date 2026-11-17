@@ -12,6 +12,10 @@ const DOC_ID = 'main';
  * If MongoDB is empty, seeds it with the static JSON first.
  */
 export async function GET() {
+  if (process.env.DASHBOARD_DATA_SOURCE === 'static') {
+    return NextResponse.json({ success: true, data: staticData, source: 'static' });
+  }
+
   try {
     const db = await getDb();
     const col = db.collection(COLLECTION);
@@ -47,6 +51,10 @@ export async function GET() {
  * Body: { months, monthly_totals, clusters, partialMonths, ... }
  */
 export async function POST(req: Request) {
+  if (process.env.DASHBOARD_DATA_SOURCE === 'static') {
+    return NextResponse.json({ success: false, error: 'Static mode does not write to MongoDB. Use the local invoice importer.' }, { status: 409 });
+  }
+
   try {
     const body = await req.json() as Partial<DashboardData>;
 

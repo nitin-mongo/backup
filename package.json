@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "import:invoices": "node scripts/import-dashboard-invoices.mjs"
   },
   "dependencies": {
     "chart.js": "^4.5.1",

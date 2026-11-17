@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { DashboardData } from '@/lib/types';
+import { MONTH_NAMES } from '@/lib/formatters';
 import TabNav from '@/components/TabNav';
 import dynamic from 'next/dynamic';
 
@@ -18,6 +19,13 @@ interface Props {
 
 export default function Dashboard({ data, dbSource }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const formatMonth = (month: string) => {
+    const [year, monthNumber] = month.split('-');
+    return `${MONTH_NAMES[Number(monthNumber)]} ${year}`;
+  };
+  const monthRange = data.months.length
+    ? `${formatMonth(data.months[0])} – ${formatMonth(data.months[data.months.length - 1])}`
+    : 'No invoice data';
 
   return (
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: 24, background: 'var(--bg)', minHeight: '100vh', color: 'var(--text)' }}>
@@ -25,7 +33,7 @@ export default function Dashboard({ data, dbSource }: Props) {
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4, color: '#e6edf3', letterSpacing: '-0.3px' }}>MongoDB Atlas Backup Cost Analysis</h1>
           <div style={{ color: '#8b949e', fontSize: 13 }}>
-            Jan 2025 – Aug 2026 &nbsp;·&nbsp; {data.clusters.length} clusters &nbsp;·&nbsp; Source: MongoDB Atlas Invoices
+            {monthRange} &nbsp;·&nbsp; {data.clusters.length} clusters &nbsp;·&nbsp; Source: MongoDB Atlas Invoices
           </div>
         </div>
         {dbSource && dbSource !== 'static' && (

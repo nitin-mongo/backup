@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "MongoDB Atlas Backup Cost Analysis",
-  description: "18 months (Jan 2025 – Jul 2026) · 38 clusters · All backup-related charges incl. AWS S3 estimates",
+  description: "MongoDB Atlas backup costs across invoice months and clusters, including AWS S3 estimates.",
 };
 
 export default function RootLayout({

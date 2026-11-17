@@ -3,6 +3,10 @@ import { DashboardData } from '@/lib/types';
 import staticData from '@/data/dashboardData.json';
 
 async function getDashboardData(): Promise<{ data: DashboardData; source: string }> {
+  if (process.env.DASHBOARD_DATA_SOURCE === 'static') {
+    return { data: staticData as unknown as DashboardData, source: 'static' };
+  }
+
   try {
     const { getDb } = await import('@/lib/mongodb');
     const db = await getDb();

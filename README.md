@@ -1,3 +1,19 @@
+## Local dashboard
+
+Run the app against the bundled JSON without connecting to MongoDB:
+
+```bash
+DASHBOARD_DATA_SOURCE=static npm run dev
+```
+
+Place `invoice_*.csv` files in this project folder and preview their import:
+
+```bash
+npm run import:invoices
+```
+
+Apply the import to `data/dashboardData.json` and `data/discountData.json` with `npm run import:invoices -- --write`. Existing invoice months are replaced, not duplicated. Partial months are detected from usage dates, and invoice-level CCB discount savings are added to the discount history.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
