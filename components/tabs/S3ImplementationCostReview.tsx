@@ -50,6 +50,7 @@ interface Props {
 
 export default function S3ImplementationCostReview({ data, compactCostHeaders = false }: Props) {
   const { monthly_totals: mt } = data;
+  const noDefragReferenceStorage = mt['2025-12']?.avgBackupGB || 0;
   const projectedBaselineCosts = getProjectedBaselineCosts(data);
   const baselineMonths = ['2026-02', '2026-03', '2026-04'];
   const baselineFebStorage = mt['2026-02']?.avgBackupGB || 0;
@@ -88,7 +89,7 @@ export default function S3ImplementationCostReview({ data, compactCostHeaders = 
     return {
       month,
       periodStatus: month === '2026-01' ? 'historical' : 'baseline',
-      projectedStorage: mt[month]?.avgBackupGB || 0,
+      projectedStorage: noDefragReferenceStorage,
       actualStorage: mt[month]?.avgBackupGB || 0,
       projectedCost: projectedBaselineCosts[month],
       projectedMonthEndActualCost: null,
@@ -143,7 +144,7 @@ export default function S3ImplementationCostReview({ data, compactCostHeaders = 
     variance: octoberAtlasActual === null ? null : octoberAtlasActual - octoberProjectedStorage * baselineCostPerGB,
     atlasOnlySavings: null,
   };
-  const novemberDaysCovered = data.partialMonthDays?.['2026-11'] ?? 13;
+  const novemberDaysCovered = data.partialMonthDays?.['2026-11'] ?? 14;
   const novemberDaysInMonth = daysInMonth('2026-11');
   const novemberActualCost = mt['2026-11']?.total ?? null;
   const novemberProjectedStorage = baselineAprStorage + baselineStorageGrowth * 7;
@@ -161,22 +162,6 @@ export default function S3ImplementationCostReview({ data, compactCostHeaders = 
     variance: novemberActualCost === null ? null : novemberActualCost * novemberDaysInMonth / novemberDaysCovered - novemberProjectedStorage * baselineCostPerGB,
     atlasOnlySavings: null,
   };
-  const januaryActualCost = mt['2026-01']?.total || 0;
-  const januaryExportCost = mt['2026-01']?.totalExport || 0;
-  const januaryActualRow = {
-    month: '2026-01',
-    periodStatus: 'historical',
-    projectedStorage: mt['2026-01']?.avgBackupGB || 0,
-    actualStorage: mt['2026-01']?.avgBackupGB || 0,
-    projectedCost: projectedBaselineCosts['2026-01'],
-    projectedMonthEndActualCost: null,
-    atlasActualCost: januaryActualCost,
-    actualCost: januaryActualCost,
-    customerS3Cost: null,
-    exportCost: januaryExportCost,
-    variance: januaryActualCost - projectedBaselineCosts['2026-01'],
-    atlasOnlySavings: null,
-  };
   const decemberProjectedStorage = baselineAprStorage + baselineStorageGrowth * 8;
   const decemberProjectedRow = {
     month: '2026-12',
@@ -192,7 +177,7 @@ export default function S3ImplementationCostReview({ data, compactCostHeaders = 
     variance: null,
     atlasOnlySavings: null,
   };
-  const reviewRows = [januaryActualRow, ...historicalCostRows, ...implementationCostRows, octoberActualRow, novemberPartialRow, decemberProjectedRow];
+  const reviewRows = [...historicalCostRows, ...implementationCostRows, octoberActualRow, novemberPartialRow, decemberProjectedRow];
   const columnWidths = compactCostHeaders
     ? ['7%', '12%', '12%', '13%', '12%', '10%', '8%', '7%', '9%', '10%']
     : ['7%', '11%', '11%', '11%', '10%', '9%', '8%', '8%', '14%', '11%'];
@@ -216,7 +201,7 @@ export default function S3ImplementationCostReview({ data, compactCostHeaders = 
       <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
         <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 5 }}>S3 Implementation Cost Review</h3>
         <p style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.6 }}>
-          February–April defines the cost and storage baseline. October is a full invoice month; November actuals cover Nov 1–13 with a 30-day run-rate estimate.
+          February–April defines the cost and storage baseline. October is a full invoice month; November actuals cover Nov 1–{novemberDaysCovered} with a 30-day run-rate estimate.
         </p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: 1, background: 'var(--border)' }}>

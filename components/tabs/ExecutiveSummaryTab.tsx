@@ -65,7 +65,7 @@ export default function ExecutiveSummaryTab({ data }: Props) {
     projectedBackupCost: totals.projectedBackupCost + row.projectedBackupCost,
     totalReduction: totals.totalReduction + row.totalReduction,
   }), { defragStorageReduction: 0, ccbDiscount: 0, actualBackupCost: 0, projectedBackupCost: 0, totalReduction: 0 });
-  const novemberDaysCovered = data.partialMonthDays?.['2026-11'] ?? 13;
+  const novemberDaysCovered = data.partialMonthDays?.['2026-11'] ?? 14;
   const novemberPeriodLabel = `Nov 1–${novemberDaysCovered}`;
   const novemberActualBackupSpend = totals['2026-11']?.total ?? 0;
   const novemberProjectedBackupSpend = novemberActualBackupSpend * daysInMonth('2026-11') / novemberDaysCovered;
@@ -82,7 +82,9 @@ export default function ExecutiveSummaryTab({ data }: Props) {
       backupCost2026,
       backupCostWithoutS3: projectedBaselineCosts[month],
       incomplete: month >= '2026-09',
-      basis: month === '2026-11' || month === '2026-12'
+      basis: month === '2026-09' || month === '2026-10'
+        ? 'Invoice actual'
+        : month === '2026-11' || month === '2026-12'
         ? 'Projected run rate*'
         : month >= '2026-09'
           ? 'Atlas only*'
@@ -113,7 +115,7 @@ export default function ExecutiveSummaryTab({ data }: Props) {
   const ccbDiscountProjected2026 = ccbDiscountsJanToOct + novemberProjectedCCBDiscount + decemberProjectedCCBDiscount;
   const defragActualThroughApril = ['2026-01', '2026-02', '2026-03', '2026-04']
     .reduce((sum, month) => sum + (decemberCCBNet - ccbDiscountByMonth[month].ccbGross), 0);
-  const s3ImplementationCost = -638;
+  const s3ImplementationCost = -671;
   const benefitActualThroughNovember = defragActualThroughApril + ccbDiscountActualThroughNovember + s3ImplementationCost;
   const projectedBenefits2026 = defragActualThroughApril + ccbDiscountProjected2026 + s3ImplementationCost;
 
@@ -287,19 +289,19 @@ export default function ExecutiveSummaryTab({ data }: Props) {
           <p style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.6 }}>January–December comparison. November and December 2026 use the {novemberPeriodLabel} run rate; September onward excludes unavailable customer S3 charges.</p>
         </div>
         <div className="scr" style={{ overflowX: 'auto' }}>
-          <table style={{ minWidth: 1300, tableLayout: 'fixed' }}>
+          <table style={{ minWidth: 800, tableLayout: 'fixed' }}>
             <colgroup>
-              <col style={{ width: '10%' }} />
-              <col style={{ width: '17%' }} />
-              <col style={{ width: '17%' }} />
-              <col style={{ width: '26%' }} />
-              <col style={{ width: '30%' }} />
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '20%' }} />
+              <col style={{ width: '34%' }} />
+              <col style={{ width: '34%' }} />
             </colgroup>
             <thead>
               <tr>
-                {['Month', '2025 Backup Cost', '2026 Backup Cost', '2026 Backup Cost Without S3 Implementation', 'Basis'].map((label, index) => (
-                  <th key={label} style={{ textAlign: index === 0 ? 'left' : 'right', whiteSpace: 'normal', lineHeight: 1.35, padding: '10px 8px' }}>{label}</th>
-                ))}
+                <th style={{ textAlign: 'left', whiteSpace: 'normal', lineHeight: 1.35, padding: '10px 8px' }}>Month</th>
+                <th style={{ textAlign: 'right', whiteSpace: 'normal', lineHeight: 1.35, padding: '10px 8px' }}>2025 Backup Cost</th>
+                <th style={{ textAlign: 'right', whiteSpace: 'normal', lineHeight: 1.35, padding: '10px 8px' }}>2026 Backup Cost</th>
+                <th style={{ textAlign: 'right', whiteSpace: 'normal', lineHeight: 1.35, padding: '10px 8px' }}>2026 Backup Cost<br />Without S3 Implementation</th>
               </tr>
             </thead>
             <tbody>
@@ -307,9 +309,11 @@ export default function ExecutiveSummaryTab({ data }: Props) {
                 <tr key={row.month}>
                   <td>{monthLabel(row.month)}</td>
                   <td style={{ textAlign: 'right', color: '#58a6ff' }}>{fmtCurrencyExact(row.backupCost2025)}</td>
-                  <td style={{ textAlign: 'right', color: row.incomplete ? 'var(--orange)' : '#3fb950' }}>{fmtCurrencyExact(row.backupCost2026)}{row.incomplete ? '*' : ''}</td>
+                  <td style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 600, color: row.month === '2026-09' || row.month === '2026-10' || !row.incomplete ? '#3fb950' : 'var(--orange)', whiteSpace: 'nowrap' }}>{fmtCurrencyExact(row.backupCost2026)}{row.incomplete ? '*' : ''}</div>
+                    <div style={{ marginTop: 2, color: row.month === '2026-09' || row.month === '2026-10' ? 'var(--text2)' : row.incomplete ? 'var(--orange)' : 'var(--text2)', fontSize: 10, whiteSpace: 'nowrap' }}>{row.basis}</div>
+                  </td>
                   <td style={{ textAlign: 'right', color: '#d29922' }}>{fmtCurrencyExact(row.backupCostWithoutS3)}</td>
-                  <td style={{ textAlign: 'right', color: row.incomplete ? 'var(--orange)' : 'var(--text2)' }}>{row.basis}</td>
                 </tr>
               ))}
             </tbody>
@@ -317,9 +321,11 @@ export default function ExecutiveSummaryTab({ data }: Props) {
               <tr style={{ borderTop: '2px solid var(--border)' }}>
                 <td style={{ textAlign: 'left' }}><strong>Jan–Dec total*</strong></td>
                 <td style={{ textAlign: 'right' }}><strong>{fmtCurrencyExact(comparisonTotals.backupCost2025)}</strong></td>
-                <td style={{ textAlign: 'right' }}><strong>{fmtCurrencyExact(comparisonTotals.backupCost2026)}*</strong></td>
+                <td style={{ textAlign: 'right' }}>
+                  <strong style={{ display: 'block' }}>{fmtCurrencyExact(comparisonTotals.backupCost2026)}*</strong>
+                  <span style={{ display: 'block', marginTop: 2, color: 'var(--orange)', fontSize: 10 }}>Mixed actual / projected*</span>
+                </td>
                 <td style={{ textAlign: 'right', color: '#d29922' }}><strong>{fmtCurrencyExact(comparisonTotals.backupCostWithoutS3)}</strong></td>
-                <td style={{ textAlign: 'right', color: 'var(--orange)' }}><strong>Mixed actual / projected*</strong></td>
               </tr>
             </tfoot>
           </table>
@@ -328,16 +334,18 @@ export default function ExecutiveSummaryTab({ data }: Props) {
         <div style={{ padding: '18px 20px 8px', borderTop: '1px solid var(--border)' }}>
           <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Spend and identified savings</h3>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 1, background: 'var(--border)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 1, background: 'var(--border)' }}>
           {[
-            { label: '2025 full-year backup spend', value: fmtCurrency(backupSpend2025), detail: 'Atlas invoice totals, Jan–Dec' },
-            { label: `2026 known spend to ${novemberPeriodLabel}`, value: fmtCurrency(knownBackupSpendToNovember), detail: 'Atlas invoices + supplied S3 estimates' },
-            { label: '2026 known spend projected to Dec 31', value: fmtCurrency(projectedBackupSpend2026), detail: 'Nov run rate for the rest of Nov and Dec' },
+            { category: 'HISTORICAL', accent: '#58a6ff', label: '2025 full-year backup spend', value: fmtCurrency(backupSpend2025), detail: 'Atlas invoice totals, Jan–Dec' },
+            { category: 'ACTUAL TO NOV 14', accent: '#3fb950', label: `2026 known spend to ${novemberPeriodLabel}`, value: fmtCurrency(knownBackupSpendToNovember), detail: 'Atlas invoices + supplied S3 estimates' },
+            { category: 'PROJECTED', accent: 'var(--orange)', label: '2026 known spend projected to Dec 31', value: fmtCurrency(projectedBackupSpend2026), detail: 'Nov run rate for the rest of Nov and Dec' },
+            { category: 'NO-S3 COMPARISON', accent: '#d29922', label: '2026 backup cost without S3 implementation', value: fmtCurrency(comparisonTotals.backupCostWithoutS3), detail: 'Sum of the comparison column, Jan–Dec' },
           ].map(metric => (
-            <div key={metric.label} style={{ background: 'var(--surface)', padding: 16 }}>
-              <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 6 }}>{metric.label}</div>
-              <strong style={{ display: 'block', fontSize: 20, color: 'var(--text)' }}>{metric.value}</strong>
-              <span style={{ display: 'block', marginTop: 6, color: 'var(--text2)', fontSize: 11, lineHeight: 1.5 }}>{metric.detail}</span>
+            <div key={metric.label} style={{ background: 'var(--surface)', padding: '12px 14px 14px', borderTop: `2px solid ${metric.accent}`, minWidth: 0 }}>
+              <div style={{ color: metric.accent, fontSize: 10, fontWeight: 700, marginBottom: 9 }}>{metric.category}</div>
+              <div style={{ fontSize: 11, color: 'var(--text2)', lineHeight: 1.4, minHeight: 31 }}>{metric.label}</div>
+              <strong style={{ display: 'block', marginTop: 4, fontSize: 20, lineHeight: 1.2, color: 'var(--text)', whiteSpace: 'nowrap' }}>{metric.value}</strong>
+              <span style={{ display: 'block', marginTop: 7, color: 'var(--text2)', fontSize: 11, lineHeight: 1.4 }}>{metric.detail}</span>
             </div>
           ))}
         </div>
