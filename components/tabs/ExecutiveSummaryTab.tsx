@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import { DashboardData } from '@/lib/types';
 import { daysInMonth, monthLabel } from '@/lib/formatters';
 import discountRaw from '@/data/discountData.json';
-import S3ImplementationCostReview, { customerS3ChartTotals, getProjectedBaselineCosts } from '@/components/tabs/S3ImplementationCostReview';
+import S3ImplementationCostReview, { customerS3ChartTotals, getProjectedBaselineCosts, getS3ImplementationReview } from '@/components/tabs/S3ImplementationCostReview';
 
 const ChartWrapper = dynamic(() => import('@/components/ChartWrapper'), { ssr: false });
 const fmtCurrency = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
@@ -115,7 +115,7 @@ export default function ExecutiveSummaryTab({ data }: Props) {
   const ccbDiscountProjected2026 = ccbDiscountsJanToOct + novemberProjectedCCBDiscount + decemberProjectedCCBDiscount;
   const defragActualThroughApril = ['2026-01', '2026-02', '2026-03', '2026-04']
     .reduce((sum, month) => sum + (decemberCCBNet - ccbDiscountByMonth[month].ccbGross), 0);
-  const s3ImplementationCost = -671;
+  const s3ImplementationCost = -getS3ImplementationReview(data).varianceTotalFebruaryToNovember;
   const benefitActualThroughNovember = defragActualThroughApril + ccbDiscountActualThroughNovember + s3ImplementationCost;
   const projectedBenefits2026 = defragActualThroughApril + ccbDiscountProjected2026 + s3ImplementationCost;
 
@@ -337,7 +337,7 @@ export default function ExecutiveSummaryTab({ data }: Props) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 1, background: 'var(--border)' }}>
           {[
             { category: 'HISTORICAL', accent: '#58a6ff', label: '2025 full-year backup spend', value: fmtCurrency(backupSpend2025), detail: 'Atlas invoice totals, Jan–Dec' },
-            { category: 'ACTUAL TO NOV 14', accent: '#3fb950', label: `2026 known spend to ${novemberPeriodLabel}`, value: fmtCurrency(knownBackupSpendToNovember), detail: 'Atlas invoices + supplied S3 estimates' },
+            { category: `ACTUAL TO NOV ${novemberDaysCovered}`, accent: '#3fb950', label: `2026 known spend to ${novemberPeriodLabel}`, value: fmtCurrency(knownBackupSpendToNovember), detail: 'Atlas invoices + supplied S3 estimates' },
             { category: 'PROJECTED', accent: 'var(--orange)', label: '2026 known spend projected to Dec 31', value: fmtCurrency(projectedBackupSpend2026), detail: 'Nov run rate for the rest of Nov and Dec' },
             { category: 'NO-S3 COMPARISON', accent: '#d29922', label: '2026 backup cost without S3 implementation', value: fmtCurrency(comparisonTotals.backupCostWithoutS3), detail: 'Sum of the comparison column, Jan–Dec' },
           ].map(metric => (
@@ -367,8 +367,8 @@ export default function ExecutiveSummaryTab({ data }: Props) {
               </tr>
               <tr>
                 <td>S3 implementation cost</td>
-                <td style={{ color: 'var(--red)' }}>{fmtCurrencyExact(s3ImplementationCost)}</td>
-                <td style={{ color: 'var(--red)' }}>{fmtCurrencyExact(s3ImplementationCost)}</td>
+                <td style={{ color: s3ImplementationCost < 0 ? 'var(--red)' : 'var(--green)' }}>{fmtCurrencyExact(s3ImplementationCost)}</td>
+                <td style={{ color: s3ImplementationCost < 0 ? 'var(--red)' : 'var(--green)' }}>{fmtCurrencyExact(s3ImplementationCost)}</td>
               </tr>
               <tr>
                 <td>December benefit yet to be realized</td>
@@ -384,7 +384,7 @@ export default function ExecutiveSummaryTab({ data }: Props) {
           </table>
         </div>
         <div style={{ padding: '10px 20px 16px', color: 'var(--text2)', fontSize: 11, lineHeight: 1.6 }}>
-          Defragmentation savings are identified only through April; the 2026 column carries that amount without annualizing it. The {fmtCurrencyExact(s3ImplementationCost)} S3 implementation cost is deducted in both actual and projected net benefits. CCB discount projection uses the {novemberPeriodLabel} daily rate for the rest of November and December. December benefits are yet to be realized. 2026 spend projections exclude customer S3 charges not supplied for September onward.
+          Defragmentation savings are identified only through April; the 2026 column carries that amount without annualizing it. The {fmtCurrencyExact(s3ImplementationCost)} S3 impact is included in both actual and projected net benefits and reflects the review table's net variance, including the November run-rate estimate. CCB discount projection uses the {novemberPeriodLabel} daily rate for the rest of November and December. December benefits are yet to be realized. 2026 spend projections exclude customer S3 charges not supplied for September onward.
         </div>
       </section>
       <section style={{ padding: '24px 20px 28px', borderTop: '1px solid var(--border)' }}>

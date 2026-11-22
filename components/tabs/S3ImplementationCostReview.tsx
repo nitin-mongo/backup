@@ -48,7 +48,7 @@ interface Props {
   compactCostHeaders?: boolean;
 }
 
-export default function S3ImplementationCostReview({ data, compactCostHeaders = false }: Props) {
+export function getS3ImplementationReview(data: DashboardData) {
   const { monthly_totals: mt } = data;
   const noDefragReferenceStorage = mt['2025-12']?.avgBackupGB || 0;
   const projectedBaselineCosts = getProjectedBaselineCosts(data);
@@ -178,9 +178,6 @@ export default function S3ImplementationCostReview({ data, compactCostHeaders = 
     atlasOnlySavings: null,
   };
   const reviewRows = [...historicalCostRows, ...implementationCostRows, octoberActualRow, novemberPartialRow, decemberProjectedRow];
-  const columnWidths = compactCostHeaders
-    ? ['7%', '12%', '12%', '13%', '12%', '10%', '8%', '7%', '9%', '10%']
-    : ['7%', '11%', '11%', '11%', '10%', '9%', '8%', '8%', '14%', '11%'];
   const totalThroughNovember = reviewRows
     .filter(row => row.month >= '2026-05' && row.month <= '2026-11')
     .reduce((totals, row) => ({
@@ -195,6 +192,15 @@ export default function S3ImplementationCostReview({ data, compactCostHeaders = 
   const varianceTotalFebruaryToNovember = reviewRows
     .filter(row => row.month >= '2026-02' && row.month <= '2026-11')
     .reduce((total, row) => total + Math.trunc(row.variance || 0), 0);
+
+  return { mt, baselineMonths, baselineStorageGrowth, baselineCostPerGB, spendChartData, spendChartRows, reviewRows, novemberDaysCovered, totalThroughNovember, varianceTotalFebruaryToNovember };
+}
+
+export default function S3ImplementationCostReview({ data, compactCostHeaders = false }: Props) {
+  const { mt, baselineMonths, baselineStorageGrowth, baselineCostPerGB, spendChartData, spendChartRows, reviewRows, novemberDaysCovered, totalThroughNovember, varianceTotalFebruaryToNovember } = getS3ImplementationReview(data);
+  const columnWidths = compactCostHeaders
+    ? ['7%', '12%', '12%', '13%', '12%', '10%', '8%', '7%', '9%', '10%']
+    : ['7%', '11%', '11%', '11%', '10%', '9%', '8%', '8%', '14%', '11%'];
 
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden', marginBottom: 24 }}>
