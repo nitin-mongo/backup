@@ -425,11 +425,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 11846.06,
-          "ccbTier1": 49.81,
-          "ccbTier2": 60.04,
-          "ccbTier3": 68.78,
-          "ccbTier4": 11667.43,
+          "ccb": 13708.77,
+          "ccbTier1": 57.68,
+          "ccbTier2": 69.52,
+          "ccbTier3": 79.64,
+          "ccbTier4": 13501.93,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -437,8 +437,8 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 11846.06,
-          "avgBackupGB": 78321,
+          "total": 13708.77,
+          "avgBackupGB": 78276,
           "avgDataGB": 36264,
           "exportGB": 0
         }
@@ -853,11 +853,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 11763.43,
-          "ccbTier1": 99.56,
-          "ccbTier2": 119.99,
-          "ccbTier3": 137.56,
-          "ccbTier4": 11406.32,
+          "ccb": 13678.3,
+          "ccbTier1": 115.28,
+          "ccbTier2": 138.93,
+          "ccbTier3": 159.28,
+          "ccbTier4": 13264.81,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -865,9 +865,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 11763.43,
-          "avgBackupGB": 77074,
-          "avgDataGB": 16067,
+          "total": 13678.3,
+          "avgBackupGB": 77405,
+          "avgDataGB": 16126,
           "exportGB": 0
         }
       },
@@ -1281,11 +1281,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 9589.35,
-          "ccbTier1": 99.64,
-          "ccbTier2": 120,
-          "ccbTier3": 137.56,
-          "ccbTier4": 9232.15,
+          "ccb": 11172.99,
+          "ccbTier1": 115.36,
+          "ccbTier2": 138.96,
+          "ccbTier3": 159.28,
+          "ccbTier4": 10759.39,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -1293,9 +1293,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 9589.35,
-          "avgBackupGB": 62571,
-          "avgDataGB": 11867,
+          "total": 11172.99,
+          "avgBackupGB": 62972,
+          "avgDataGB": 11926,
           "exportGB": 0
         }
       },
@@ -1709,11 +1709,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 7756.43,
-          "ccbTier1": 99.72,
-          "ccbTier2": 120.04,
-          "ccbTier3": 137.56,
-          "ccbTier4": 7399.11,
+          "ccb": 9003.09,
+          "ccbTier1": 115.44,
+          "ccbTier2": 139,
+          "ccbTier3": 159.28,
+          "ccbTier4": 8589.37,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -1721,8 +1721,8 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 7756.43,
-          "avgBackupGB": 50345,
+          "total": 9003.09,
+          "avgBackupGB": 50471,
           "avgDataGB": 10500,
           "exportGB": 0
         }
@@ -2137,11 +2137,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 7352.65,
-          "ccbTier1": 99.64,
-          "ccbTier2": 120.08,
-          "ccbTier3": 137.56,
-          "ccbTier4": 6995.37,
+          "ccb": 8565.13,
+          "ccbTier1": 115.36,
+          "ccbTier2": 139.04,
+          "ccbTier3": 159.28,
+          "ccbTier4": 8151.45,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -2149,8 +2149,8 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 7352.65,
-          "avgBackupGB": 47651,
+          "total": 8565.13,
+          "avgBackupGB": 47948,
           "avgDataGB": 10800,
           "exportGB": 0
         }
@@ -2565,11 +2565,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 7224.89,
-          "ccbTier1": 99.72,
-          "ccbTier2": 120.08,
-          "ccbTier3": 137.56,
-          "ccbTier4": 6867.53,
+          "ccb": 8384.35,
+          "ccbTier1": 115.46,
+          "ccbTier2": 139.04,
+          "ccbTier3": 159.28,
+          "ccbTier4": 7970.57,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -2577,8 +2577,8 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 7224.89,
-          "avgBackupGB": 46799,
+          "total": 8384.35,
+          "avgBackupGB": 46906,
           "avgDataGB": 10500,
           "exportGB": 0
         }
@@ -2993,11 +2993,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 6666.77,
-          "ccbTier1": 49.78,
-          "ccbTier2": 60,
-          "ccbTier3": 68.75,
-          "ccbTier4": 6488.24,
+          "ccb": 7748.33,
+          "ccbTier1": 57.64,
+          "ccbTier2": 69.47,
+          "ccbTier3": 79.6,
+          "ccbTier4": 7541.62,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -3005,9 +3005,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 6666.77,
-          "avgBackupGB": 43774,
-          "avgDataGB": 17447,
+          "total": 7748.33,
+          "avgBackupGB": 43940,
+          "avgDataGB": 17604,
           "exportGB": 0
         }
       },
@@ -3421,11 +3421,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 5352.02,
-          "ccbTier1": 99.66,
-          "ccbTier2": 120.08,
-          "ccbTier3": 137.56,
-          "ccbTier4": 4994.72,
+          "ccb": 6222.39,
+          "ccbTier1": 115.4,
+          "ccbTier2": 139.04,
+          "ccbTier3": 159.28,
+          "ccbTier4": 5808.67,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -3433,9 +3433,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 5352.02,
-          "avgBackupGB": 34307,
-          "avgDataGB": 6597,
+          "total": 6222.39,
+          "avgBackupGB": 34452,
+          "avgDataGB": 6638,
           "exportGB": 0
         }
       },
@@ -3849,11 +3849,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 4394.32,
-          "ccbTier1": 49.83,
-          "ccbTier2": 60.04,
-          "ccbTier3": 68.78,
-          "ccbTier4": 4215.67,
+          "ccb": 5122.75,
+          "ccbTier1": 57.7,
+          "ccbTier2": 69.52,
+          "ccbTier3": 79.64,
+          "ccbTier4": 4915.89,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -3861,9 +3861,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 4394.32,
-          "avgBackupGB": 28615,
-          "avgDataGB": 16918,
+          "total": 5122.75,
+          "avgBackupGB": 28814,
+          "avgDataGB": 17065,
           "exportGB": 0
         }
       },
@@ -4277,11 +4277,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 2815.63,
-          "ccbTier1": 99.62,
-          "ccbTier2": 120.08,
-          "ccbTier3": 137.56,
-          "ccbTier4": 2458.37,
+          "ccb": 3250.36,
+          "ccbTier1": 115.34,
+          "ccbTier2": 139.04,
+          "ccbTier3": 159.28,
+          "ccbTier4": 2836.7,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -4289,9 +4289,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 2815.63,
-          "avgBackupGB": 17388,
-          "avgDataGB": 3167,
+          "total": 3250.36,
+          "avgBackupGB": 17332,
+          "avgDataGB": 3226,
           "exportGB": 0
         }
       },
@@ -4705,11 +4705,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 2568.25,
-          "ccbTier1": 99.64,
-          "ccbTier2": 120.08,
-          "ccbTier3": 137.56,
-          "ccbTier4": 2210.97,
+          "ccb": 2977.55,
+          "ccbTier1": 115.38,
+          "ccbTier2": 139.04,
+          "ccbTier3": 159.28,
+          "ccbTier4": 2563.85,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -4717,9 +4717,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 2568.25,
-          "avgBackupGB": 15738,
-          "avgDataGB": 3767,
+          "total": 2977.55,
+          "avgBackupGB": 15759,
+          "avgDataGB": 3826,
           "exportGB": 0
         }
       },
@@ -4755,11 +4755,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 920.44,
-          "ccbTier1": 109.18,
-          "ccbTier2": 131.1,
-          "ccbTier3": 143.64,
-          "ccbTier4": 536.52,
+          "ccb": 1097.96,
+          "ccbTier1": 126.4,
+          "ccbTier2": 151.81,
+          "ccbTier3": 166.32,
+          "ccbTier4": 653.43,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -4767,9 +4767,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 920.44,
-          "avgBackupGB": 2284,
-          "avgDataGB": 1236,
+          "total": 1097.96,
+          "avgBackupGB": 2377,
+          "avgDataGB": 1272,
           "exportGB": 0
         }
       }
@@ -5174,11 +5174,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 867.25,
-          "ccbTier1": 97.31,
-          "ccbTier2": 116.28,
-          "ccbTier3": 131.29,
-          "ccbTier4": 522.37,
+          "ccb": 1011.77,
+          "ccbTier1": 112.68,
+          "ccbTier2": 134.64,
+          "ccbTier3": 152.02,
+          "ccbTier4": 612.43,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -5186,9 +5186,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 867.25,
-          "avgBackupGB": 4856,
-          "avgDataGB": 2087,
+          "total": 1011.77,
+          "avgBackupGB": 4903,
+          "avgDataGB": 2109,
           "exportGB": 0
         }
       },
@@ -5602,11 +5602,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 822.04,
-          "ccbTier1": 49.84,
-          "ccbTier2": 60.04,
-          "ccbTier3": 68.78,
-          "ccbTier4": 643.38,
+          "ccb": 953.69,
+          "ccbTier1": 57.71,
+          "ccbTier2": 69.52,
+          "ccbTier3": 79.64,
+          "ccbTier4": 746.82,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -5614,9 +5614,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 822.04,
-          "avgBackupGB": 4787,
-          "avgDataGB": 1625,
+          "total": 953.69,
+          "avgBackupGB": 4797,
+          "avgDataGB": 1670,
           "exportGB": 0
         }
       },
@@ -5688,11 +5688,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 764.4,
-          "ccbTier1": 49.78,
-          "ccbTier2": 60.04,
-          "ccbTier3": 68.78,
-          "ccbTier4": 585.8,
+          "ccb": 884.68,
+          "ccbTier1": 57.64,
+          "ccbTier2": 69.52,
+          "ccbTier3": 79.64,
+          "ccbTier4": 677.88,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -5700,9 +5700,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 764.4,
-          "avgBackupGB": 4402,
-          "avgDataGB": 14567,
+          "total": 884.68,
+          "avgBackupGB": 4400,
+          "avgDataGB": 14626,
           "exportGB": 0
         }
       }
@@ -6107,11 +6107,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 678.79,
-          "ccbTier1": 102.03,
-          "ccbTier2": 120.08,
-          "ccbTier3": 137.56,
-          "ccbTier4": 319.12,
+          "ccb": 788.29,
+          "ccbTier1": 118.15,
+          "ccbTier2": 139.04,
+          "ccbTier3": 159.28,
+          "ccbTier4": 371.82,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -6119,8 +6119,8 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 678.79,
-          "avgBackupGB": 3119,
+          "total": 788.29,
+          "avgBackupGB": 3132,
           "avgDataGB": 996,
           "exportGB": 0
         }
@@ -6535,21 +6535,21 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 417.13,
-          "ccbTier1": 49.8,
-          "ccbTier2": 60.04,
-          "ccbTier3": 68.78,
-          "ccbTier4": 238.51,
-          "cloudBackup": 199.57,
+          "ccb": 483.42,
+          "ccbTier1": 57.66,
+          "ccbTier2": 69.52,
+          "ccbTier3": 79.64,
+          "ccbTier4": 276.6,
+          "cloudBackup": 233.36,
           "exportUpload": 0,
           "exportRestore": 0,
           "exportVM": 0,
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 616.7,
-          "avgBackupGB": 2086,
-          "avgDataGB": 10349,
+          "total": 716.78,
+          "avgBackupGB": 2088,
+          "avgDataGB": 10423,
           "exportGB": 0
         }
       },
@@ -6963,11 +6963,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 602.89,
-          "ccbTier1": 52.23,
-          "ccbTier2": 60.04,
-          "ccbTier3": 68.78,
-          "ccbTier4": 421.84,
+          "ccb": 699.76,
+          "ccbTier1": 60.48,
+          "ccbTier2": 69.52,
+          "ccbTier3": 79.64,
+          "ccbTier4": 490.12,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -6975,9 +6975,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 602.89,
-          "avgBackupGB": 3309,
-          "avgDataGB": 418,
+          "total": 699.76,
+          "avgBackupGB": 3318,
+          "avgDataGB": 565,
           "exportGB": 0
         }
       }
@@ -7382,11 +7382,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 571.56,
-          "ccbTier1": 52.25,
-          "ccbTier2": 60.04,
-          "ccbTier3": 68.78,
-          "ccbTier4": 390.49,
+          "ccb": 664.85,
+          "ccbTier1": 60.5,
+          "ccbTier2": 69.52,
+          "ccbTier3": 79.64,
+          "ccbTier4": 455.19,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -7394,8 +7394,8 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 571.56,
-          "avgBackupGB": 3100,
+          "total": 664.85,
+          "avgBackupGB": 3117,
           "avgDataGB": 1800,
           "exportGB": 0
         }
@@ -7432,11 +7432,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 525.57,
-          "ccbTier1": 109.17,
-          "ccbTier2": 131.1,
-          "ccbTier3": 143.64,
-          "ccbTier4": 141.66,
+          "ccb": 605.58,
+          "ccbTier1": 126.39,
+          "ccbTier2": 151.8,
+          "ccbTier3": 166.32,
+          "ccbTier4": 161.07,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -7444,9 +7444,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 525.57,
-          "avgBackupGB": 967,
-          "avgDataGB": 531,
+          "total": 605.58,
+          "avgBackupGB": 959,
+          "avgDataGB": 540,
           "exportGB": 0
         }
       }
@@ -7473,11 +7473,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 517.95,
-          "ccbTier1": 109.06,
-          "ccbTier2": 131.1,
-          "ccbTier3": 143.64,
-          "ccbTier4": 134.15,
+          "ccb": 603.33,
+          "ccbTier1": 126.28,
+          "ccbTier2": 151.8,
+          "ccbTier3": 166.32,
+          "ccbTier4": 158.93,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -7485,9 +7485,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 517.95,
-          "avgBackupGB": 942,
-          "avgDataGB": 1394,
+          "total": 603.33,
+          "avgBackupGB": 953,
+          "avgDataGB": 1413,
           "exportGB": 0
         }
       }
@@ -7892,11 +7892,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 452.67,
-          "ccbTier1": 49.81,
-          "ccbTier2": 60.04,
-          "ccbTier3": 68.78,
-          "ccbTier4": 274.04,
+          "ccb": 528.1,
+          "ccbTier1": 57.68,
+          "ccbTier2": 69.52,
+          "ccbTier3": 79.64,
+          "ccbTier4": 321.26,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -7904,9 +7904,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 452.67,
-          "avgBackupGB": 2323,
-          "avgDataGB": 1725,
+          "total": 528.1,
+          "avgBackupGB": 2346,
+          "avgDataGB": 1776,
           "exportGB": 0
         }
       },
@@ -8320,11 +8320,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 434.01,
-          "ccbTier1": 63.14,
-          "ccbTier2": 60.04,
-          "ccbTier3": 68.78,
-          "ccbTier4": 242.05,
+          "ccb": 505.86,
+          "ccbTier1": 73.11,
+          "ccbTier2": 69.52,
+          "ccbTier3": 79.64,
+          "ccbTier4": 283.59,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -8332,8 +8332,8 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 434.01,
-          "avgBackupGB": 2135,
+          "total": 505.86,
+          "avgBackupGB": 2154,
           "avgDataGB": 750,
           "exportGB": 0
         }
@@ -8370,11 +8370,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 429.44,
-          "ccbTier1": 109.1,
-          "ccbTier2": 131.1,
-          "ccbTier3": 143.64,
-          "ccbTier4": 45.6,
+          "ccb": 498.1,
+          "ccbTier1": 126.32,
+          "ccbTier2": 151.8,
+          "ccbTier3": 166.32,
+          "ccbTier4": 53.66,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -8382,9 +8382,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 429.44,
-          "avgBackupGB": 647,
-          "avgDataGB": 1195,
+          "total": 498.1,
+          "avgBackupGB": 650,
+          "avgDataGB": 1196,
           "exportGB": 0
         }
       }
@@ -8789,11 +8789,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 357.69,
-          "ccbTier1": 102.03,
-          "ccbTier2": 120.08,
-          "ccbTier3": 96.81,
-          "ccbTier4": 38.77,
+          "ccb": 415.07,
+          "ccbTier1": 118.14,
+          "ccbTier2": 139.04,
+          "ccbTier3": 112.45,
+          "ccbTier4": 45.44,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -8801,8 +8801,8 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 357.69,
-          "avgBackupGB": 1101,
+          "total": 415.07,
+          "avgBackupGB": 1105,
           "avgDataGB": 600,
           "exportGB": 0
         }
@@ -9217,11 +9217,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 301.04,
-          "ccbTier1": 47.5,
-          "ccbTier2": 56.24,
-          "ccbTier3": 62.51,
-          "ccbTier4": 134.79,
+          "ccb": 349.69,
+          "ccbTier1": 55,
+          "ccbTier2": 65.12,
+          "ccbTier3": 72.38,
+          "ccbTier4": 157.19,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -9229,9 +9229,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 301.04,
-          "avgBackupGB": 1574,
-          "avgDataGB": 984,
+          "total": 349.69,
+          "avgBackupGB": 1582,
+          "avgDataGB": 1013,
           "exportGB": 0
         }
       },
@@ -9267,10 +9267,10 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 298.53,
-          "ccbTier1": 118.75,
-          "ccbTier2": 142.5,
-          "ccbTier3": 37.28,
+          "ccb": 346.06,
+          "ccbTier1": 137.5,
+          "ccbTier2": 165,
+          "ccbTier3": 43.56,
           "ccbTier4": 0,
           "cloudBackup": 0,
           "exportUpload": 0,
@@ -9279,7 +9279,7 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 298.53,
+          "total": 346.06,
           "avgBackupGB": 305,
           "avgDataGB": 600,
           "exportGB": 0
@@ -9668,10 +9668,10 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 257.35,
-          "ccbTier1": 99.54,
-          "ccbTier2": 119.56,
-          "ccbTier3": 38.25,
+          "ccb": 301.97,
+          "ccbTier1": 115.26,
+          "ccbTier2": 138.52,
+          "ccbTier3": 48.19,
           "ccbTier4": 0,
           "cloudBackup": 0,
           "exportUpload": 0,
@@ -9680,8 +9680,8 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 257.35,
-          "avgBackupGB": 628,
+          "total": 301.97,
+          "avgBackupGB": 640,
           "avgDataGB": 0,
           "exportGB": 0
         }
@@ -10092,16 +10092,16 @@
           "ccbTier2": 0,
           "ccbTier3": 0,
           "ccbTier4": 0,
-          "cloudBackup": 250.47,
+          "cloudBackup": 292.69,
           "exportUpload": 0,
           "exportRestore": 0,
           "exportVM": 0,
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 250.47,
+          "total": 292.69,
           "avgBackupGB": 0,
-          "avgDataGB": 8474,
+          "avgDataGB": 7523,
           "exportGB": 0
         }
       }
@@ -10128,9 +10128,9 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 240.49,
-          "ccbTier1": 109.07,
-          "ccbTier2": 126.8,
+          "ccb": 276.58,
+          "ccbTier1": 126.29,
+          "ccbTier2": 145.67,
           "ccbTier3": 4.62,
           "ccbTier4": 0,
           "cloudBackup": 0,
@@ -10140,9 +10140,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 240.49,
-          "avgBackupGB": 248,
-          "avgDataGB": 189,
+          "total": 276.58,
+          "avgBackupGB": 246,
+          "avgDataGB": 215,
           "exportGB": 0
         }
       }
@@ -10547,11 +10547,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 191.92,
-          "ccbTier1": 49.78,
-          "ccbTier2": 60.04,
-          "ccbTier3": 68.78,
-          "ccbTier4": 13.32,
+          "ccb": 222.4,
+          "ccbTier1": 57.64,
+          "ccbTier2": 69.52,
+          "ccbTier3": 79.64,
+          "ccbTier4": 15.6,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -10559,8 +10559,8 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 191.92,
-          "avgBackupGB": 584,
+          "total": 222.4,
+          "avgBackupGB": 585,
           "avgDataGB": 1500,
           "exportGB": 0
         }
@@ -10975,11 +10975,11 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 187.61,
-          "ccbTier1": 49.78,
-          "ccbTier2": 60.04,
-          "ccbTier3": 68.78,
-          "ccbTier4": 9.01,
+          "ccb": 217.29,
+          "ccbTier1": 57.64,
+          "ccbTier2": 69.52,
+          "ccbTier3": 79.64,
+          "ccbTier4": 10.49,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -10987,7 +10987,7 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 187.61,
+          "total": 217.29,
           "avgBackupGB": 555,
           "avgDataGB": 450,
           "exportGB": 0
@@ -11025,9 +11025,9 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 176.89,
-          "ccbTier1": 118.75,
-          "ccbTier2": 58.14,
+          "ccb": 205.9,
+          "ccbTier1": 137.5,
+          "ccbTier2": 68.4,
           "ccbTier3": 0,
           "ccbTier4": 0,
           "cloudBackup": 0,
@@ -11037,8 +11037,8 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 176.89,
-          "avgBackupGB": 156,
+          "total": 205.9,
+          "avgBackupGB": 157,
           "avgDataGB": 270,
           "exportGB": 0
         }
@@ -11066,9 +11066,9 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 159.05,
-          "ccbTier1": 118.75,
-          "ccbTier2": 40.3,
+          "ccb": 183.72,
+          "ccbTier1": 137.5,
+          "ccbTier2": 46.22,
           "ccbTier3": 0,
           "ccbTier4": 0,
           "cloudBackup": 0,
@@ -11078,7 +11078,7 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 159.05,
+          "total": 183.72,
           "avgBackupGB": 137,
           "avgDataGB": 0,
           "exportGB": 0
@@ -11107,9 +11107,9 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 153.66,
-          "ccbTier1": 118.75,
-          "ccbTier2": 34.91,
+          "ccb": 180.32,
+          "ccbTier1": 137.5,
+          "ccbTier2": 42.82,
           "ccbTier3": 0,
           "ccbTier4": 0,
           "cloudBackup": 0,
@@ -11119,8 +11119,8 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 153.66,
-          "avgBackupGB": 132,
+          "total": 180.32,
+          "avgBackupGB": 134,
           "avgDataGB": 270,
           "exportGB": 0
         }
@@ -11130,11 +11130,11 @@
       "name": "dbox6-instance3",
       "months": {
         "2026-11": {
-          "ccb": 148.51,
-          "ccbTier1": 38.06,
-          "ccbTier2": 41.71,
-          "ccbTier3": 46.06,
-          "ccbTier4": 22.68,
+          "ccb": 179.85,
+          "ccbTier1": 45.56,
+          "ccbTier2": 50.59,
+          "ccbTier3": 55.93,
+          "ccbTier4": 27.77,
           "cloudBackup": 0,
           "exportUpload": 0,
           "exportRestore": 0,
@@ -11142,9 +11142,9 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 148.51,
-          "avgBackupGB": 553,
-          "avgDataGB": 1577,
+          "total": 179.85,
+          "avgBackupGB": 581,
+          "avgDataGB": 1649,
           "exportGB": 0
         },
         "2026-10": {
@@ -11189,9 +11189,9 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 115.01,
-          "ccbTier1": 109.06,
-          "ccbTier2": 5.95,
+          "ccb": 133.09,
+          "ccbTier1": 126.28,
+          "ccbTier2": 6.81,
           "ccbTier3": 0,
           "ccbTier4": 0,
           "cloudBackup": 0,
@@ -11201,7 +11201,7 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 115.01,
+          "total": 133.09,
           "avgBackupGB": 102,
           "avgDataGB": 0,
           "exportGB": 0
@@ -11230,9 +11230,9 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 113.28,
-          "ccbTier1": 109.05,
-          "ccbTier2": 4.23,
+          "ccb": 131.08,
+          "ccbTier1": 126.27,
+          "ccbTier2": 4.81,
           "ccbTier3": 0,
           "ccbTier4": 0,
           "cloudBackup": 0,
@@ -11242,7 +11242,7 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 113.28,
+          "total": 131.08,
           "avgBackupGB": 100,
           "avgDataGB": 300,
           "exportGB": 0
@@ -11631,9 +11631,9 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 79.09,
-          "ccbTier1": 52.25,
-          "ccbTier2": 26.84,
+          "ccb": 92.61,
+          "ccbTier1": 60.5,
+          "ccbTier2": 32.11,
           "ccbTier3": 0,
           "ccbTier4": 0,
           "cloudBackup": 0,
@@ -11643,8 +11643,8 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 79.09,
-          "avgBackupGB": 162,
+          "total": 92.61,
+          "avgBackupGB": 164,
           "avgDataGB": 300,
           "exportGB": 0
         }
@@ -11672,8 +11672,8 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 77.42,
-          "ccbTier1": 77.42,
+          "ccb": 90.29,
+          "ccbTier1": 90.29,
           "ccbTier2": 0,
           "ccbTier3": 0,
           "ccbTier4": 0,
@@ -11684,7 +11684,7 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 77.42,
+          "total": 90.29,
           "avgBackupGB": 61,
           "avgDataGB": 0,
           "exportGB": 0
@@ -11713,8 +11713,8 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 75.16,
-          "ccbTier1": 75.16,
+          "ccb": 87.41,
+          "ccbTier1": 87.41,
           "ccbTier2": 0,
           "ccbTier3": 0,
           "ccbTier4": 0,
@@ -11725,8 +11725,8 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 75.16,
-          "avgBackupGB": 65,
+          "total": 87.41,
+          "avgBackupGB": 66,
           "avgDataGB": 210,
           "exportGB": 0
         }
@@ -11754,8 +11754,8 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 70.9,
-          "ccbTier1": 70.9,
+          "ccb": 82.3,
+          "ccbTier1": 82.3,
           "ccbTier2": 0,
           "ccbTier3": 0,
           "ccbTier4": 0,
@@ -11766,7 +11766,7 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 70.9,
+          "total": 82.3,
           "avgBackupGB": 57,
           "avgDataGB": 0,
           "exportGB": 0
@@ -12160,14 +12160,14 @@
           "ccbTier2": 0,
           "ccbTier3": 0,
           "ccbTier4": 0,
-          "cloudBackup": 59.26,
+          "cloudBackup": 68.8,
           "exportUpload": 0,
           "exportRestore": 0,
           "exportVM": 0,
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 59.26,
+          "total": 68.8,
           "avgBackupGB": 0,
           "avgDataGB": 1800,
           "exportGB": 0
@@ -12196,8 +12196,8 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 56.91,
-          "ccbTier1": 56.91,
+          "ccb": 66.07,
+          "ccbTier1": 66.07,
           "ccbTier2": 0,
           "ccbTier3": 0,
           "ccbTier4": 0,
@@ -12208,8 +12208,8 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 56.91,
-          "avgBackupGB": 49,
+          "total": 66.07,
+          "avgBackupGB": 50,
           "avgDataGB": 192,
           "exportGB": 0
         }
@@ -12237,8 +12237,8 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 52.7,
-          "ccbTier1": 52.7,
+          "ccb": 61.18,
+          "ccbTier1": 61.18,
           "ccbTier2": 0,
           "ccbTier3": 0,
           "ccbTier4": 0,
@@ -12249,7 +12249,7 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 52.7,
+          "total": 61.18,
           "avgBackupGB": 46,
           "avgDataGB": 0,
           "exportGB": 0
@@ -12278,8 +12278,8 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 50.19,
-          "ccbTier1": 50.19,
+          "ccb": 58.63,
+          "ccbTier1": 58.63,
           "ccbTier2": 0,
           "ccbTier3": 0,
           "ccbTier4": 0,
@@ -12290,8 +12290,8 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 50.19,
-          "avgBackupGB": 39,
+          "total": 58.63,
+          "avgBackupGB": 40,
           "avgDataGB": 0,
           "exportGB": 0
         }
@@ -12319,8 +12319,8 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 45.3,
-          "ccbTier1": 45.3,
+          "ccb": 52.72,
+          "ccbTier1": 52.72,
           "ccbTier2": 0,
           "ccbTier3": 0,
           "ccbTier4": 0,
@@ -12331,7 +12331,7 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 45.3,
+          "total": 52.72,
           "avgBackupGB": 36,
           "avgDataGB": 0,
           "exportGB": 0
@@ -12720,8 +12720,8 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 24.1,
-          "ccbTier1": 24.1,
+          "ccb": 28.13,
+          "ccbTier1": 28.13,
           "ccbTier2": 0,
           "ccbTier3": 0,
           "ccbTier4": 0,
@@ -12732,8 +12732,8 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 24.1,
-          "avgBackupGB": 48,
+          "total": 28.13,
+          "avgBackupGB": 49,
           "avgDataGB": 150,
           "exportGB": 0
         }
@@ -13144,16 +13144,16 @@
           "ccbTier2": 0,
           "ccbTier3": 0,
           "ccbTier4": 0,
-          "cloudBackup": 15.51,
+          "cloudBackup": 19.83,
           "exportUpload": 0,
           "exportRestore": 0,
           "exportVM": 0,
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 15.51,
+          "total": 19.83,
           "avgBackupGB": 0,
-          "avgDataGB": 734,
+          "avgDataGB": 634,
           "exportGB": 0
         }
       }
@@ -13558,8 +13558,8 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 15.47,
-          "ccbTier1": 15.47,
+          "ccb": 17.69,
+          "ccbTier1": 17.69,
           "ccbTier2": 0,
           "ccbTier3": 0,
           "ccbTier4": 0,
@@ -13570,7 +13570,7 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 15.47,
+          "total": 17.69,
           "avgBackupGB": 28,
           "avgDataGB": 150,
           "exportGB": 0
@@ -13986,8 +13986,8 @@
           "exportGB": 0
         },
         "2026-11": {
-          "ccb": 10.91,
-          "ccbTier1": 10.91,
+          "ccb": 12.6,
+          "ccbTier1": 12.6,
           "ccbTier2": 0,
           "ccbTier3": 0,
           "ccbTier4": 0,
@@ -13998,7 +13998,7 @@
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 10.91,
+          "total": 12.6,
           "avgBackupGB": 22,
           "avgDataGB": 150,
           "exportGB": 0
@@ -14419,14 +14419,14 @@
           "ccbTier2": 0,
           "ccbTier3": 0,
           "ccbTier4": 0,
-          "cloudBackup": 3.04,
+          "cloudBackup": 3.52,
           "exportUpload": 0,
           "exportRestore": 0,
           "exportVM": 0,
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 3.04,
+          "total": 3.52,
           "avgBackupGB": 0,
           "avgDataGB": 0,
           "exportGB": 0
@@ -14838,14 +14838,14 @@
           "ccbTier2": 0,
           "ccbTier3": 0,
           "ccbTier4": 0,
-          "cloudBackup": 1.52,
+          "cloudBackup": 1.76,
           "exportUpload": 0,
           "exportRestore": 0,
           "exportVM": 0,
           "exportIOPS": 0,
           "totalExport": 0,
           "otherBackup": 0,
-          "total": 1.52,
+          "total": 1.76,
           "avgBackupGB": 0,
           "avgDataGB": 150,
           "exportGB": 0
@@ -16840,17 +16840,17 @@
       "exportGB": 0
     },
     "2026-11": {
-      "ccb": 88616.49,
-      "cloudBackup": 529.37,
+      "ccb": 102980.15,
+      "cloudBackup": 619.96,
       "exportUpload": 0,
       "exportRestore": 0,
       "exportVM": 0,
       "exportIOPS": 0,
       "totalExport": 0,
       "otherBackup": 0,
-      "total": 89145.86,
-      "avgBackupGB": 544373,
-      "avgDataGB": 201917,
+      "total": 103600.11,
+      "avgBackupGB": 546364,
+      "avgDataGB": 202037,
       "exportGB": 0
     }
   },
@@ -17270,7 +17270,7 @@
     }
   },
   "partialMonthDays": {
-    "2026-11": 19,
+    "2026-11": 22,
     "2025-06": 30,
     "2026-10": 31
   }
